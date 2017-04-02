@@ -210,7 +210,8 @@ hr {
 
 <p>Assuming \(\mathbf{g}_1\),&hellip;,\(\mathbf{g}_k\) are \(k\) genetic variants of interest, generally represented as the number of dominant alleles (0, 1, 2) or the absence or presence of a dominant allele (0, 1) and \(\mathbf{e}_1\),&hellip;,\(\mathbf{e}_s\) are \(s\) environments of interest, generally represented as ordinal scores (0, 1, 2 &hellip;) or continuous variables. We define the genetic score \(\mathbf{g}\) and environmental score \(\mathbf{e}\) as: </p>
 
-<p>\[\begin{eqnarray} \mathbf{g}&=&\sum_{i=1}^{k} p_i \mathbf{g}_j \ \mathbf{e}&=&\sum_{l=1}^{s} q_l \mathbf{e}_l \end{eqnarray}\]
+<p>\[\mathbf{g}=\sum_{i=1}^{k} p_i \mathbf{g}_j \] 
+\[\mathbf{e}=\sum_{l=1}^{s} q_l \mathbf{e}_l \]
 where \(\|p\|_1=\sum_{i=1}^{k}p_j=1\) and \(\|q\|_1= \sum_{l=1}^{s}q_l=1\). The weights can be interpreted as the relative contributions of each genetic variant or environment.</p>
 
 <p>The weights of these scores are estimated within a generalized linear model of the form :</p>
@@ -228,7 +229,7 @@ where \(g\) is the link function, \(f\) is a linear function between \(\mathbf{g
 
 <h2>Algorithm</h2>
 
-<p>Full details of the algorithm will be available when the paper is released as pre-print and sent for peer-review (Coming soon, before Summer 2017).</p>
+<p>Full details of the algorithm are available on <a href="arxiv.org/abs/1703.08111">arXiv</a>.</p>
 
 <h2>Implementation</h2>
 
@@ -255,13 +256,64 @@ where \(g\) is the link function, \(f\) is a linear function between \(\mathbf{g
 
 <p>\[\mathbf{g}_j \sim Binomial(n=1,p=.30) \ j = 1, 2, 3, 4\]
 \[\mathbf{e}_l \sim Normal(\mu=0,\sigma=1.5) \ l = 1, 2, 3\]
-\[\mathbf{g} = .2\mathbf{g}_1 + .15\mathbf{g}_2 - .3\mathbf{g}_3 + .1\mathbf{g}_4 + .05\mathbf{g}_1\mathbf{g}_3 + .2\mathbf{g}_2\mathbf{g}_3 \ \mathbf{e} = -.45\mathbf{e}_1 + .35\mathbf{e}_2 + .2\mathbf{e}_3\]
-\[\mathbf{\mu} = -2 + 2\mathbf{g} + 3\mathbf{e} + \mathbf{z} + 5\mathbf{ge} + 2\mathbf{gz} - 1.5\mathbf{ez} + 2\mathbf{gez} \ y \sim Normal(\mu,\sigma=1)\]</p>
+\[\mathbf{g} = .2\mathbf{g}_1 + .15\mathbf{g}_2 - .3\mathbf{g}_3 + .1\mathbf{g}_4 + .05\mathbf{g}_1\mathbf{g}_3 + .2\mathbf{g}_2\mathbf{g}_3 \] 
+\[ \mathbf{e} = -.45\mathbf{e}_1 + .35\mathbf{e}_2 + .2\mathbf{e}_3\]
+\[\mathbf{\mu} = -2 + 2\mathbf{g} + 3\mathbf{e} + \mathbf{z} + 5\mathbf{ge} + 2\mathbf{gz} - 1.5\mathbf{ez} + 2\mathbf{gez} \] 
+\[ y \sim Normal(\mu,\sigma=1)\]</p>
+
+<p>Let&#39;s load the package and look at the dataset.</p>
+
+<pre><code class="r">library(LEGIT)
+</code></pre>
+
+<pre><code>## Loading required package: formula.tools
+</code></pre>
+
+<pre><code>## Loading required package: operator.tools
+</code></pre>
+
+<pre><code class="r">example_3way(N=5, sigma=1, logit=FALSE, seed=7)
+</code></pre>
+
+<pre><code>## $data
+##             y     y_true        z
+## 1  3.80723699 4.67808801 3.184193
+## 2  7.96819988 7.24948932 3.752280
+## 3  4.49051121 4.37985833 3.591745
+## 4 -0.01796159 0.06050518 2.016947
+## 5  0.71520307 1.13569353 2.723936
+## 
+## $G
+##   g1 g2 g3 g4 g1_g3 g2_g3
+## 1  1  1  0  0     0     0
+## 2  0  0  0  0     0     0
+## 3  0  1  1  0     0     1
+## 4  0  0  0  1     0     0
+## 5  0  0  0  0     0     0
+## 
+## $E
+##          e1           e2        e3
+## 1 0.5354793  0.701520767  1.259626
+## 2 4.0751277 -1.340701085  1.058013
+## 3 3.4221779 -0.460992449  1.958947
+## 4 0.4860308 -0.007233633 -2.081994
+## 5 2.8441006  1.482246224  1.909375
+## 
+## $coef_G
+## [1]  0.20  0.15 -0.30  0.10  0.05  0.20
+## 
+## $coef_E
+## [1] -0.45  0.35  0.20
+## 
+## $coef_main
+## [1] 5.0 2.0 3.0 1.0 5.0 1.5 2.0 2.0
+</code></pre>
+
+<p>Currently &ldquo;data&rdquo; contains the outcome, the true outcome without the noise and the covariate \(z\). This dataset should always contain the outcome and all covariates (except for the genes and environments from \(\mathbf{g}\) and \(\mathbf{e}\)).&ldquo;G&rdquo; contains the genetic variants and &ldquo;E&rdquo; contains the environments. This is all you need to fit a LEGIT model.</p>
 
 <p>We generate N=250 training observations and 100 test observations.</p>
 
-<pre><code class="r">library(LEGIT)
-train = example_3way(N=250, sigma=1, logit=FALSE, seed=7)
+<pre><code class="r">train = example_3way(N=250, sigma=1, logit=FALSE, seed=7)
 test = example_3way(N=100, sigma=1, logit=FALSE, seed=6)
 </code></pre>
 
@@ -496,8 +548,10 @@ train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
 
 <p>\[\mathbf{g}_j \sim Binomial(n=1,p=.30) \ j = 1, 2, 3, 4\]
 \[\mathbf{e}_l \sim Normal(\mu=0,\sigma=1.5) \ l = 1, 2, 3\]
-\[\mathbf{g} = .2\mathbf{g}_1 + .15\mathbf{g}_2 - .3\mathbf{g}_3 + .1\mathbf{g}_4 + .05\mathbf{g}_1\mathbf{g}_3 + .2\mathbf{g}_2\mathbf{g}_3 \ \mathbf{e} = -.45\mathbf{e}_1 + .35\mathbf{e}_2 + .2\mathbf{e}_3\]
-\[\mathbf{\mu} = -1 + 2\mathbf{g} + 3\mathbf{e} + 4\mathbf{ge} \ y \sim Binomial(n=1,p=logit(\mu))\]</p>
+\[\mathbf{g} = .2\mathbf{g}_1 + .15\mathbf{g}_2 - .3\mathbf{g}_3 + .1\mathbf{g}_4 + .05\mathbf{g}_1\mathbf{g}_3 + .2\mathbf{g}_2\mathbf{g}_3 \] 
+\[ \mathbf{e} = -.45\mathbf{e}_1 + .35\mathbf{e}_2 + .2\mathbf{e}_3\]
+\[\mathbf{\mu} = -1 + 2\mathbf{g} + 3\mathbf{e} + 4\mathbf{ge} \]
+\[ y \sim Binomial(n=1,p=logit(\mu))\]</p>
 
 <p>We generate N=1000 training observations.</p>
 
@@ -607,7 +661,7 @@ train = example_2way(N=1000, logit=TRUE, seed=777)
 pROC::plot.roc(cv_5folds_bin$roc_curve[[1]])
 </code></pre>
 
-<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-11"/>
+<p><img src="data:image/png;base64,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" alt="plot of chunk unnamed-chunk-12"/>
 Although the weights of the genetic variants are a bit off, the model predictive power is good.</p>
 
 </body>

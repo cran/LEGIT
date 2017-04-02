@@ -1,10 +1,10 @@
-9f467794a6595b4fcb00815999f5d57c *DESCRIPTION
+a4b5d0c1256b6390910ae786fa4d2f56 *DESCRIPTION
 028ac71751c04256405960010f29c056 *NAMESPACE
 3dafb6f610352c57c09253b2dbb49a6c *R/LEGIT.R
-fbdf54b63cf3f5e916f9349a41e1b8db *build/vignette.rds
-7644e5a4fa072f2136640937c3a604d1 *inst/doc/LEGIT.R
-2d0987c4034206270d643db75f09b9e9 *inst/doc/LEGIT.Rmd
-275ba774f588926e8772b28db5e52baa *inst/doc/LEGIT.html
+5bedec6a4b9c65290ff63cda91f9f82d *build/vignette.rds
+3940e14cb115dae108a8f62057167022 *inst/doc/LEGIT.R
+53ceca460b28830ae0b928eec4eebedb *inst/doc/LEGIT.Rmd
+63c3853ece352162c8ceaf9b56f0e221 *inst/doc/LEGIT.html
 78ccb1892cde6ba706a43ec0ba0f9af4 *man/LEGIT.Rd
 363a66147ef5be1c7cc2fd8960ba8a7a *man/LEGIT_cv.Rd
 170e542d4a40bd239efa0de29c933a74 *man/backward_step.Rd
@@ -15,4 +15,4 @@ d1c2ebe9b53af61066da57054523800c *man/longitudinal_folds.Rd
 45f3ed39bdfb561a77f554846c8057dc *man/predict.LEGIT.Rd
 7af4260afa23c66630c0b88685928c39 *man/stepwise_search.Rd
 05cec4a3a889f71677b04d95fb7126b4 *man/summary.LEGIT.Rd
-2d0987c4034206270d643db75f09b9e9 *vignettes/LEGIT.Rmd
+53ceca460b28830ae0b928eec4eebedb *vignettes/LEGIT.Rmd
