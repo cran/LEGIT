@@ -9,15 +9,14 @@ bootstrap_var_select(data, formula, boot_iter = 1000, boot_size = NULL,
   search_type = "bidirectional-forward", search = 0,
   search_criterion = "AIC", forward_exclude_p_bigger = 0.2,
   backward_exclude_p_smaller = 0.01, exclude_worse_AIC = TRUE,
-  max_steps = 100, cv_iter = 5, cv_folds = 10, folds = NULL,
-  Huber_p = 1, classification = FALSE, start_latent_var = NULL,
-  eps = 0.01, maxiter = 25, family = gaussian, seed = NULL,
-  progress = TRUE, n_cluster = 1)
+  max_steps = 100, start_latent_var = NULL, eps = 0.01, maxiter = 100,
+  family = gaussian, seed = NULL, progress = TRUE, n_cluster = 1,
+  best_subsets = 5)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
 
-\item{formula}{Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).}
+\item{formula}{Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).}
 
 \item{boot_iter}{number of bootstrap samples (Default = 1000).}
 
@@ -33,25 +32,15 @@ bootstrap_var_select(data, formula, boot_iter = 1000, boot_size = NULL,
 
 \item{search}{If \code{search=0}, uses a stepwise search for all latent variables. Otherwise, if search = i, uses a stepwise search on the i-th latent variable (Default = 0).}
 
-\item{search_criterion}{Criterion used to determine which variable is the best to add or worst to drop. if \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_AUC"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.}
+\item{search_criterion}{Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC (Default = "AIC").}
 
-\item{forward_exclude_p_bigger}{If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20).}
+\item{forward_exclude_p_bigger}{If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.}
 
-\item{backward_exclude_p_smaller}{If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01).}
+\item{backward_exclude_p_smaller}{If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.}
 
-\item{exclude_worse_AIC}{If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE).}
+\item{exclude_worse_AIC}{If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.}
 
 \item{max_steps}{Maximum number of steps taken (Default = 50).}
-
-\item{cv_iter}{Number of cross-validation iterations (Default = 5).}
-
-\item{cv_folds}{Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.}
-
-\item{folds}{Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.}
-
-\item{Huber_p}{Parameter controlling the Huber cross-validation error (Default =1).}
-
-\item{classification}{Set to TRUE if you are doing classification (binary outcome).}
 
 \item{start_latent_var}{Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).}
 
@@ -66,6 +55,8 @@ bootstrap_var_select(data, formula, boot_iter = 1000, boot_size = NULL,
 \item{progress}{If TRUE, shows the progress done (Default=TRUE).}
 
 \item{n_cluster}{Number of parallel clusters, I recommend using the number of CPU cores - 1 (Default = 1).}
+
+\item{best_subsets}{If \code{best_subsets = k}, the output will show the k most frequently chosen subsets of variables (Default = 5)}
 }
 \value{
 Returns a list of vectors containing the percentage of times that each variable was selected within each latent variable.

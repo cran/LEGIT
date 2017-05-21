@@ -199,7 +199,7 @@
 
 #' @title Summarizing IMLEGIT fits
 #' @description Shows the summary for all parts (main and latent variables) of the LEGIT model.
-#' @param object An object of class "IMLEGIT", usually, a result of a call to LEGIT.
+#' @param object An object of class "IMLEGIT", usually, a result of a call to IMLEGIT.
 #' @param ... Further arguments passed to or from other methods.
 #' @return Returns a list of objects of class "summary.glm" containing the summary of each parts (main and latent variables) of the model.
 #' @examples
@@ -336,10 +336,10 @@
 #' @param env_extra data.frame of the variables to try including inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental). Set to NULL if using a backward search.
 #' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
 #' @param search If \code{search="genes"}, uses a stepwise search for the genetic score variables. If \code{search="env"}, uses a stepwise search for the environmental score variables. If \code{search="both"}, uses a stepwise search for both the gene and environmental score variables (Default = "both").
-#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. if \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_AUC"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20).
-#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01).
-#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE).
+#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_AUC"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
+#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
+#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
 #' @param max_steps Maximum number of steps taken (Default = 50).
 #' @param cv_iter Number of cross-validation iterations (Default = 5).
 #' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
@@ -383,16 +383,16 @@
 #' @title Stepwise search for the best subset of elements in the latent variables with the IMLEGIT model
 #' @description Adds the best variable or drops the worst variable one at a time in the latent variables. You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
 #' @param data data.frame of the dataset to be used.
-#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
 #' @param interactive_mode If TRUE, uses interactive mode. In interactive mode, at each iteration, the user is shown the AIC, BIC, p-value and also the cross-validation \eqn{R^2} if \code{search_criterion="cv"} and the cross-validation AUC if \code{search_criterion="cv_AUC"} for the best 5 variables. The user must then enter a number between 1 and 5 to select the variable to be added, entering anything else will stop the search.
 #' @param latent_var_original list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise the latent variables will be named L1, L2, ...
 #' @param latent_var_extra list of data.frame (with the same structure as latent_var_original) containing the additionnal elements to try including inside the latent variables. Set to NULL if using a backward search.
 #' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
 #' @param search If \code{search=0}, uses a stepwise search for all latent variables. Otherwise, if search = i, uses a stepwise search on the i-th latent variable (Default = 0).
-#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. if \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_AUC"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20).
-#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01).
-#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE).
+#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_AUC"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
+#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
+#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
 #' @param max_steps Maximum number of steps taken (Default = 50).
 #' @param cv_iter Number of cross-validation iterations (Default = 5).
 #' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
@@ -428,7 +428,7 @@
 #' @title Bootstrap variable selection (for IMLEGIT)
 #' @description Creates bootstrap samples, run stepwise search on all of them and then report the percentage of times that each variable was selected. This is very computationally demanding. With small sample sizes, variable selection can be unstable and bootstrap can be used to give us an idea of the degree of certitude that a variable should be included or not.
 #' @param data data.frame of the dataset to be used.
-#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
 #' @param boot_iter number of bootstrap samples (Default = 1000).
 #' @param boot_size Optional size of the bootstrapped samples (Default = number of observations).
 #' @param boot_group Optional vector which represents the group associated with each observation. Sampling will be done by group instead of by observations (very important if you have longitudinal data). The sample sizes of the bootstrap samples might differ by up to "\code{boot_size} - maximum group size" observations.
@@ -436,23 +436,19 @@
 #' @param latent_var_extra list of data.frame (with the same structure as latent_var_original) containing the additional elements to try including inside the latent variables. Set to NULL if using a backward search.
 #' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
 #' @param search If \code{search=0}, uses a stepwise search for all latent variables. Otherwise, if search = i, uses a stepwise search on the i-th latent variable (Default = 0).
-#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. if \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_AUC"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20).
-#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01).
-#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE).
+#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC (Default = "AIC").
+#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
+#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
+#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
 #' @param max_steps Maximum number of steps taken (Default = 50).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param classification Set to TRUE if you are doing classification (binary outcome).
 #' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
 #' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
 #' @param maxiter Maximum number of iterations.
 #' @param family Outcome distribution and link function (Default = gaussian).
 #' @param seed Optional seed for bootstrap.
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default =1).
 #' @param progress If TRUE, shows the progress done (Default=TRUE).
 #' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores - 1 (Default = 1).
+#' @param best_subsets If \code{best_subsets = k}, the output will show the k most frequently chosen subsets of variables (Default = 5)
 #' @return Returns a list of vectors containing the percentage of times that each variable was selected within each latent variable.
 #' @examples
 #'	\dontrun{
@@ -499,7 +495,7 @@ example_2way = function(N, sigma=1, logit=FALSE, seed=NULL){
 		eps = rnorm(N,0,sigma)
 		y = y_true + eps
 	}
-	return(list(data=data.frame(y,y_true),G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2), coef_main=c(5,2,3,4)))
+	return(list(data=data.frame(y,y_true),G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2), coef_main=c(-1,2,3,4)))
 }
 
 example_3way = function(N, sigma=2.5, logit=FALSE, seed=NULL){
@@ -525,7 +521,7 @@ example_3way = function(N, sigma=2.5, logit=FALSE, seed=NULL){
 		eps = rnorm(N,0,sigma)
 		y = y_true + eps
 	}
-	return(list(data=data.frame(y,y_true,z),G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2), coef_main=c(5,2,3,1,5,1.5,2,2)))
+	return(list(data=data.frame(y,y_true,z),G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2), coef_main=c(-2,2,3,1,5,-1.5,2,2)))
 }
 
 example_3way_3latent = function(N, sigma=1, logit=FALSE, seed=NULL){
@@ -554,7 +550,7 @@ example_3way_3latent = function(N, sigma=1, logit=FALSE, seed=NULL){
 		eps = rnorm(N,0,sigma)
 		y = y_true + eps
 	}
-	return(list(data=data.frame(y,y_true),latent_var=list(G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),Z=data.frame(z1,z2,z3)),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2),coef_Z=c(.15,.75,.10), coef_main=c(5,2,3,1,5,1.5,2,2)))
+	return(list(data=data.frame(y,y_true),latent_var=list(G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),Z=data.frame(z1,z2,z3)),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2),coef_Z=c(.15,.75,.10), coef_main=c(-2,2,3,1,5,-1.5,2,2)))
 }
 
 longitudinal_folds = function(cv_iter=1, cv_folds=10, id, formula=NULL, data=NULL, data_needed=NULL){
@@ -803,6 +799,7 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 	#Change some arguments so that we get the right AIC, BIC and dispersion for the model
 	true_aic = fit_a$aic + 2*(fit_b$rank - 1) + 2*(fit_c$rank - 1)
 	true_rank = fit_a$rank + (fit_b$rank - 1) + (fit_c$rank - 1)
+	true_aicc = true_aic + ((2*true_rank*(true_rank+1))/((fit_a$df.null+1)-true_rank-1))
 	true_bic = true_aic - 2*true_rank + log(fit_a$df.null+1)*true_rank
 	true_df.residual = (fit_a$df.null+1) - true_rank
 	true_null.deviance = fit_a$null.deviance
@@ -815,7 +812,7 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 		warning(paste0("Did not reach convergence in maxiter iterations. Try increasing maxiter or make eps smaller."))
 	}
 
-	result = list(fit_main = fit_a, fit_genes = fit_b, fit_env = fit_c, true_model_parameters=list(AIC = true_aic, BIC = true_bic, rank = true_rank, df.residual = true_df.residual, null.deviance=true_null.deviance))
+	result = list(fit_main = fit_a, fit_genes = fit_b, fit_env = fit_c, true_model_parameters=list(AIC = true_aic, AICc = true_aicc, BIC = true_bic, rank = true_rank, df.residual = true_df.residual, null.deviance=true_null.deviance))
 	class(result) <- "LEGIT"
 	return(result)
 }
@@ -896,6 +893,7 @@ IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, m
 	formula_withlatent_var  = vector("list", k)
 	formula_step  = vector("list", k)
 	fit_ = vector("list", k)
+	names(fit_) = names(latent_var)
 
 	# Deconstructing formula into parts (With latent_var and without latent_var)
 	formula_full = stats::terms(formula,simplify=TRUE)
@@ -994,6 +992,7 @@ IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, m
 	#Change some arguments so that we get the right AIC, BIC and dispersion for the model
 	true_aic = fit_a$aic + 2*(total_rank)
 	true_rank = fit_a$rank + total_rank
+	true_aicc = true_aic + ((2*true_rank*(true_rank+1))/((fit_a$df.null+1)-true_rank-1))
 	true_bic = true_aic - 2*true_rank + log(fit_a$df.null+1)*true_rank
 	true_df.residual = (fit_a$df.null+1) - true_rank
 	true_null.deviance = fit_a$null.deviance
@@ -1006,7 +1005,7 @@ IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, m
 		warning(paste0("Did not reach convergence in maxiter iterations. Try increasing maxiter or make eps smaller."))
 	}
 
-	result = list(fit_main = fit_a, fit_latent_var = fit_, true_model_parameters=list(AIC = true_aic, BIC = true_bic, rank = true_rank, df.residual = true_df.residual, null.deviance=true_null.deviance))
+	result = list(fit_main = fit_a, fit_latent_var = fit_, true_model_parameters=list(AIC = true_aic, AICc = true_aicc, BIC = true_bic, rank = true_rank, df.residual = true_df.residual, null.deviance=true_null.deviance))
 	class(result) <- "IMLEGIT"
 	return(result)
 }
@@ -1112,6 +1111,7 @@ summary.LEGIT = function(object, ...){
 summary.IMLEGIT = function(object, ...){
 	newobject = list(fit_main=object$fit_main)
 	for (i in 1:length(object$fit_latent_var)) newobject[[i+1]] = object$fit_latent_var[[i]]
+	names(newobject) = c("fit_main",paste0("fit_",names(object$fit_latent_var)))
 	lapply(newobject,function(object_current, dispersion = NULL, correlation = FALSE, symbolic.cor = FALSE, ...){
 		# Using the right values
 		object_current$aic = object$true_model_parameters$AIC
@@ -1477,7 +1477,7 @@ IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=
 	return(list(R2_cv = R2_cv, Huber_cv = Huber_cv, L1_cv=L1_cv, possible_outliers = possible_outliers_data))
 }
 
-forward_step = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_toadd=NULL, env_toadd=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=25, family=gaussian, seed=NULL, print=TRUE){
+forward_step = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_toadd=NULL, env_toadd=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, seed=NULL, print=TRUE){
 	# How much genes or env to add
 	if (search=="genes") elements_N = NCOL(genes_toadd)
 	if (search=="env") elements_N = NCOL(env_toadd)
@@ -1494,8 +1494,10 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 	criterion_diff = rep(NA, elements_N)
 	# In interactive model, we must keep track of every AIC, BIC, p-value, Cross-validated R2 and AUC to show the user at every iteration
 	if (interactive_mode){
-		if (search=="genes") interactive = data.frame(variable=colnames(genes_toadd), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
-		if (search=="env") interactive = data.frame(variable=colnames(env_toadd), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
+		if (search=="genes") interactive = data.frame(variable=colnames(genes_toadd), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N))
+		if (search=="env") interactive = data.frame(variable=colnames(env_toadd), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N))
+		if (search=="genes" && (search_criterion == "cv" || search_criterion == "cv_AUC" || search_criterion=="cv_Huber" || search_criterion=="cv_L1")) interactive = data.frame(variable=colnames(genes_toadd), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
+		if (search=="env" && (search_criterion == "cv" || search_criterion == "cv_AUC" || search_criterion=="cv_Huber" || search_criterion=="cv_L1")) interactive = data.frame(variable=colnames(env_toadd), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
 	}
 	# Complete dataset
 	if (NCOL(genes_current)==0) genes_current_nomiss = NULL
@@ -1532,6 +1534,12 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 			criterion_after[j] = fit_with$true_model_parameters$AIC
 			criterion_diff[j] = criterion_after[j] - criterion_before[j]
 		}
+		if (search_criterion=="AICc"){
+			if (empty_start_dataset) criterion_before[j] = Inf
+			else criterion_before[j] = fit_without$true_model_parameters$AICc
+			criterion_after[j] = fit_with$true_model_parameters$AICc
+			criterion_diff[j] = criterion_after[j] - criterion_before[j]
+		}
 		if (search_criterion=="BIC"){
 			if (empty_start_dataset) criterion_before[j] = Inf
 			else criterion_before[j] = fit_without$true_model_parameters$BIC
@@ -1550,6 +1558,10 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 			else interactive$AIC_old[j] = fit_without$true_model_parameters$AIC
 			interactive$AIC_new[j] = fit_with$true_model_parameters$AIC
 
+			if (empty_start_dataset) interactive$AICc_old[j] = Inf
+			else interactive$AICc_old[j] = fit_without$true_model_parameters$AICc
+			interactive$AICc_new[j] = fit_with$true_model_parameters$AICc
+
 			if (empty_start_dataset) interactive$BIC_old[j] = Inf
 			else interactive$BIC_old[j] = fit_without$true_model_parameters$BIC
 			interactive$BIC_new[j] = fit_with$true_model_parameters$BIC
@@ -1562,7 +1574,7 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 	}
 	# Only do this if NOT in interactive mode, otherwise at the end of the algorithm, we show the the data.frame interactive and let the user choose
 	if (!interactive_mode){
-		if (search_criterion=="AIC" || search_criterion=="BIC"){
+		if (search_criterion=="AIC" || search_criterion=="AICc" || search_criterion=="BIC"){
 			if (min(criterion_diff,na.rm=TRUE) > 0){
 				if (search=="genes" && print) cat("No gene added\n")
 				if (search=="env" && print) cat("No environment added\n")
@@ -1678,6 +1690,8 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 		interactive_n = min(5,elements_N)
 		if (search_criterion=="AIC" && empty_start_dataset) neworder = order(interactive$AIC_new, decreasing=FALSE)
 		if (search_criterion=="AIC" && !empty_start_dataset) neworder = order(interactive$AIC_new - interactive$AIC_old, decreasing=FALSE)
+		if (search_criterion=="AICc" && empty_start_dataset) neworder = order(interactive$AICc_new, decreasing=FALSE)
+		if (search_criterion=="AICc" && !empty_start_dataset) neworder = order(interactive$AICc_new - interactive$AICc_old, decreasing=FALSE)
 		if (search_criterion=="BIC" && empty_start_dataset) neworder = order(interactive$BIC_new, decreasing=FALSE)
 		if (search_criterion=="BIC" && !empty_start_dataset) neworder = order(interactive$BIC_new - interactive$BIC_old, decreasing=FALSE)
 		if (search_criterion=="cv" && empty_start_dataset) neworder = order(interactive$cv_R2_new, decreasing=TRUE)
@@ -1721,7 +1735,7 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 	if (search=="env") return(list(fit=fit, start_genes=start_genes,start_env=start_env,env_current=env_current,env_toadd=env_toadd))
 }
 
-forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_toadd=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=25, family=gaussian, seed=NULL, print=TRUE){
+forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_toadd=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=100, family=gaussian, seed=NULL, print=TRUE){
 	k = length(latent_var_current)
 	# How much genes or env to add
 	elements_N = NCOL(latent_var_toadd[[search]])
@@ -1736,7 +1750,10 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 	criterion_after = rep(NA, elements_N)
 	criterion_diff = rep(NA, elements_N)
 	# In interactive model, we must keep track of every AIC, BIC, p-value, Cross-validated R2 and AUC to show the user at every iteration
-	if (interactive_mode) interactive = data.frame(variable=colnames(latent_var_toadd[[search]]), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
+	if (interactive_mode){
+		if (search_criterion == "cv" || search_criterion == "cv_AUC" || search_criterion=="cv_Huber" || search_criterion=="cv_L1") interactive = data.frame(variable=colnames(latent_var_toadd[[search]]), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
+		else interactive = data.frame(variable=colnames(latent_var_toadd[[search]]), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N))
+	}	
 	# Complete dataset
 	if (NCOL(latent_var_current[[1]])==0) latent_var_current_nomiss = NULL
 	else latent_var_current_nomiss = latent_var_current[[1]]
@@ -1779,6 +1796,12 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 			criterion_after[j] = fit_with$true_model_parameters$AIC
 			criterion_diff[j] = criterion_after[j] - criterion_before[j]
 		}
+		if (search_criterion=="AICc"){
+			if (empty_start_dataset) criterion_before[j] = Inf
+			else criterion_before[j] = fit_without$true_model_parameters$AICc
+			criterion_after[j] = fit_with$true_model_parameters$AICc
+			criterion_diff[j] = criterion_after[j] - criterion_before[j]
+		}
 		if (search_criterion=="BIC"){
 			if (empty_start_dataset) criterion_before[j] = Inf
 			else criterion_before[j] = fit_without$true_model_parameters$BIC
@@ -1797,6 +1820,10 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 			else interactive$AIC_old[j] = fit_without$true_model_parameters$AIC
 			interactive$AIC_new[j] = fit_with$true_model_parameters$AIC
 
+			if (empty_start_dataset) interactive$AICc_old[j] = Inf
+			else interactive$AICc_old[j] = fit_without$true_model_parameters$AICc
+			interactive$AICc_new[j] = fit_with$true_model_parameters$AICc
+
 			if (empty_start_dataset) interactive$BIC_old[j] = Inf
 			else interactive$BIC_old[j] = fit_without$true_model_parameters$BIC
 			interactive$BIC_new[j] = fit_with$true_model_parameters$BIC
@@ -1808,7 +1835,7 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 	}
 	# Only do this if NOT in interactive mode, otherwise at the end of the algorithm, we show the the data.frame interactive and let the user choose
 	if (!interactive_mode){
-		if (search_criterion=="AIC" || search_criterion=="BIC"){
+		if (search_criterion=="AIC" || search_criterion=="AICc" || search_criterion=="BIC"){
 			if (min(criterion_diff,na.rm=TRUE) > 0){
 				if (print) cat(paste0("No element from ", names(latent_var_current)[search]," was added\n"))
 				return(NULL)
@@ -1824,7 +1851,7 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 	if (search_criterion == "cv" || search_criterion == "cv_AUC" || search_criterion=="cv_Huber" || search_criterion=="cv_L1"){
 		# Dropping variables with p < threshold and worse AIC
 		if (interactive_mode) interactive = interactive[good,]
-		latent_var_toadd = latent_var_toadd[[search]][,good, drop=FALSE]
+		latent_var_toadd[[search]] = latent_var_toadd[[search]][,good, drop=FALSE]
 		elements_N = NCOL(latent_var_toadd[[search]])
 		# Vector which says how much the criterion changed from including the variable
 		criterion_before = rep(NA, elements_N)
@@ -1916,6 +1943,8 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 		interactive_n = min(5,elements_N)
 		if (search_criterion=="AIC" && empty_start_dataset) neworder = order(interactive$AIC_new, decreasing=FALSE)
 		if (search_criterion=="AIC" && !empty_start_dataset) neworder = order(interactive$AIC_new - interactive$AIC_old, decreasing=FALSE)
+		if (search_criterion=="AICc" && empty_start_dataset) neworder = order(interactive$AICc_new, decreasing=FALSE)
+		if (search_criterion=="AICc" && !empty_start_dataset) neworder = order(interactive$AICc_new - interactive$AICc_old, decreasing=FALSE)
 		if (search_criterion=="BIC" && empty_start_dataset) neworder = order(interactive$BIC_new, decreasing=FALSE)
 		if (search_criterion=="BIC" && !empty_start_dataset) neworder = order(interactive$BIC_new - interactive$BIC_old, decreasing=FALSE)
 		if (search_criterion=="cv" && empty_start_dataset) neworder = order(interactive$cv_R2_new, decreasing=TRUE)
@@ -1949,7 +1978,7 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 }
 
 
-backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_dropped=NULL, env_dropped=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=25, family=gaussian, seed=NULL, print=TRUE){
+backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_dropped=NULL, env_dropped=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, seed=NULL, print=TRUE){
 	# How much genes or env to add
 	if (search=="genes") elements_N = NCOL(genes_current)
 	if (search=="env") elements_N = NCOL(env_current)
@@ -1966,9 +1995,12 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 	criterion_diff = rep(NA, elements_N)
 	# In interactive model, we must keep track of every AIC, BIC, p-value, Cross-validated R2 and AUC to show the user at every iteration
 	if (interactive_mode){
-		if (search=="genes") interactive = data.frame(variable=colnames(genes_current), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
-		if (search=="env") interactive = data.frame(variable=colnames(env_current), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
+		if (search=="genes") interactive = data.frame(variable=colnames(genes_current), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N))
+		if (search=="env") interactive = data.frame(variable=colnames(env_current), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N))
+		if (search=="genes" && (search_criterion == "cv" || search_criterion == "cv_AUC" || search_criterion=="cv_Huber" || search_criterion=="cv_L1")) interactive = data.frame(variable=colnames(genes_current), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
+		if (search=="env" && (search_criterion == "cv" || search_criterion == "cv_AUC" || search_criterion=="cv_Huber" || search_criterion=="cv_L1")) interactive = data.frame(variable=colnames(env_current), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
 	}
+
 	# we need to always use this sample as it could be different when removing a variable
 	comp_with = stats::complete.cases(data,genes_current,env_current)
 	fit_with = fit
@@ -1994,6 +2026,11 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 			criterion_after[j] = fit_without$true_model_parameters$AIC
 			criterion_diff[j] = criterion_after[j] - criterion_before[j]
 		}
+		if (search_criterion=="AICc"){
+			criterion_before[j] = fit_with$true_model_parameters$AICc
+			criterion_after[j] = fit_without$true_model_parameters$AICc
+			criterion_diff[j] = criterion_after[j] - criterion_before[j]
+		}
 		if (search_criterion=="BIC"){
 			criterion_before[j] = fit_with$true_model_parameters$BIC
 			criterion_after[j] = fit_without$true_model_parameters$BIC
@@ -2009,6 +2046,9 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 			interactive$AIC_old[j] = fit_with$true_model_parameters$AIC
 			interactive$AIC_new[j] = fit_without$true_model_parameters$AIC
 
+			interactive$AICc_old[j] = fit_with$true_model_parameters$AICc
+			interactive$AICc_new[j] = fit_without$true_model_parameters$AICc
+
 			interactive$BIC_old[j] = fit_with$true_model_parameters$BIC
 			interactive$BIC_new[j] = fit_without$true_model_parameters$BIC
 		}
@@ -2020,7 +2060,7 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 	}
 	# Only do this if NOT in interactive mode, otherwise at the end of the algorithm, we show the the data.frame interactive and let the user choose
 	if (!interactive_mode){
-		if (search_criterion=="AIC" || search_criterion=="BIC"){
+		if (search_criterion=="AIC" || search_criterion=="AICc" || search_criterion=="BIC"){
 			if (min(criterion_diff,na.rm=TRUE) > 0){
 				if (search=="genes" && print) cat("No gene removed\n")
 				if (search=="env" && print) cat("No environment removed\n")
@@ -2121,6 +2161,7 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 		if (search_criterion=="cv") interactive_n = min(5,elements_N_cv)
 		else interactive_n = min(5,elements_N)
 		if (search_criterion=="AIC") neworder = order(interactive$AIC_new - interactive$AIC_old, decreasing=FALSE)
+		if (search_criterion=="AICc") neworder = order(interactive$AICc_new - interactive$AICc_old, decreasing=FALSE)
 		if (search_criterion=="BIC") neworder = order(interactive$BIC_new - interactive$BIC_old, decreasing=FALSE)
 		if (search_criterion=="cv") neworder = order(interactive$cv_R2_new - interactive$cv_R2_old, decreasing=TRUE)
 		if (search_criterion=="cv_Huber") neworder = order(interactive$cv_Huber_new - interactive$cv_Huber_old, decreasing=FALSE)
@@ -2159,7 +2200,7 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 	if (search=="env") return(list(fit=fit, start_genes=start_genes,start_env=start_env,env_current=env_current,env_dropped=env_dropped))
 }
 
-backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_dropped=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=25, family=gaussian, seed=NULL, print=TRUE){
+backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_dropped=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=100, family=gaussian, seed=NULL, print=TRUE){
 	k = length(latent_var_current)
 	# How much genes or env to add
 	elements_N = NCOL(latent_var_current[[search]])
@@ -2174,7 +2215,10 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 	criterion_after = rep(NA, elements_N)
 	criterion_diff = rep(NA, elements_N)
 	# In interactive model, we must keep track of every AIC, BIC, p-value, Cross-validated R2 and AUC to show the user at every iteration
-	if (interactive_mode) interactive = data.frame(variable=colnames(latent_var_current[[search]]), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
+	if (interactive_mode){
+		if (search_criterion == "cv" || search_criterion == "cv_AUC" || search_criterion=="cv_Huber" || search_criterion=="cv_L1") interactive = data.frame(variable=colnames(latent_var_current[[search]]), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N),cv_R2_old=rep(NA, elements_N),cv_R2_new=rep(NA, elements_N),cv_AUC_old=rep(NA, elements_N),cv_AUC_new=rep(NA, elements_N),cv_Huber_old=rep(NA, elements_N),cv_Huber_new=rep(NA, elements_N),cv_L1_old=rep(NA, elements_N),cv_L1_new=rep(NA, elements_N))
+		else interactive = data.frame(variable=colnames(latent_var_current[[search]]), N_old=rep(NA, elements_N), N_new=rep(NA, elements_N), p_value=rep(NA, elements_N),AIC_old=rep(NA, elements_N),AIC_new=rep(NA, elements_N),AICc_old=rep(NA, elements_N),AICc_new=rep(NA, elements_N),BIC_old=rep(NA, elements_N),BIC_new=rep(NA, elements_N))
+	}	
 	# we need to always use this sample as it could be different when removing a variable
 	comp_with = stats::complete.cases(data,latent_var_current[[1]])
 	if (k > 1) for (i in 2:k){
@@ -2209,6 +2253,11 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 			criterion_after[j] = fit_without$true_model_parameters$AIC
 			criterion_diff[j] = criterion_after[j] - criterion_before[j]
 		}
+		if (search_criterion=="AICc"){
+			criterion_before[j] = fit_with$true_model_parameters$AICc
+			criterion_after[j] = fit_without$true_model_parameters$AICc
+			criterion_diff[j] = criterion_after[j] - criterion_before[j]
+		}
 		if (search_criterion=="BIC"){
 			criterion_before[j] = fit_with$true_model_parameters$BIC
 			criterion_after[j] = fit_without$true_model_parameters$BIC
@@ -2224,6 +2273,9 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 			interactive$AIC_old[j] = fit_with$true_model_parameters$AIC
 			interactive$AIC_new[j] = fit_without$true_model_parameters$AIC
 
+			interactive$AICc_old[j] = fit_with$true_model_parameters$AICc
+			interactive$AICc_new[j] = fit_without$true_model_parameters$AICc
+
 			interactive$BIC_old[j] = fit_with$true_model_parameters$BIC
 			interactive$BIC_new[j] = fit_without$true_model_parameters$BIC
 		}
@@ -2234,7 +2286,7 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 	}
 	# Only do this if NOT in interactive mode, otherwise at the end of the algorithm, we show the the data.frame interactive and let the user choose
 	if (!interactive_mode){
-		if (search_criterion=="AIC" || search_criterion=="BIC"){
+		if (search_criterion=="AIC" || search_criterion=="AICc" || search_criterion=="BIC"){
 			if (min(criterion_diff,na.rm=TRUE) > 0){
 				if (print) cat(paste0("No element from ", names(latent_var_current)[search]," was removed\n"))
 				return(NULL)
@@ -2331,6 +2383,7 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 		if (search_criterion=="cv") interactive_n = min(5,elements_N_cv)
 		else interactive_n = min(5,elements_N)
 		if (search_criterion=="AIC") neworder = order(interactive$AIC_new - interactive$AIC_old, decreasing=FALSE)
+		if (search_criterion=="AICc") neworder = order(interactive$AICc_new - interactive$AICc_old, decreasing=FALSE)
 		if (search_criterion=="BIC") neworder = order(interactive$BIC_new - interactive$BIC_old, decreasing=FALSE)
 		if (search_criterion=="cv") neworder = order(interactive$cv_R2_new - interactive$cv_R2_old, decreasing=TRUE)
 		if (search_criterion=="cv_Huber") neworder = order(interactive$cv_Huber_new - interactive$cv_Huber_old, decreasing=FALSE)
@@ -2359,16 +2412,17 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 }
 
 
-stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original=NULL, env_original=NULL, genes_extra=NULL, env_extra=NULL, search_type="bidirectional-forward", search="both", search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=25, family=gaussian, seed=NULL, print=TRUE, remove_miss=FALSE){
+stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original=NULL, env_original=NULL, genes_extra=NULL, env_extra=NULL, search_type="bidirectional-forward", search="both", search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, seed=NULL, print=TRUE, remove_miss=FALSE){
 	if (forward_exclude_p_bigger > 1 || forward_exclude_p_bigger <= 0) stop("forward_exclude_p_bigger must be between 0 and 1 (Set to 1 to ignore p-values in forward step)")
 	if (backward_exclude_p_smaller >= 1 || backward_exclude_p_smaller < 0) stop("backward_exclude_p_smaller must be between 0 and 1 (Set to 0 to ignore p-values in backward step)")
 	if (search_criterion=="AIC") string_choice="lowest AIC"
+	else if (search_criterion=="AICc") string_choice="lowest AICc"
 	else if (search_criterion=="BIC") string_choice="lowest BIC"
 	else if (search_criterion=="cv") string_choice="lowest cross-validation error"
 	else if (search_criterion=="cv_Huber") string_choice="lowest cross-validation Huber error"
 	else if (search_criterion=="cv_L1") string_choice="lowest cross-validation L1-norm error"
 	else if (search_criterion=="cv_AUC") string_choice="biggest cross-validated area under the curve"
-	else stop("Not a valid search_criterion, use: AIC, BIC, cv or cv_AUC")
+	else stop("Not a valid search_criterion, use: AIC, AICc, BIC, cv, cv_Huber, cv_L1 or cv_AUC")
 
 	# Retaining only the needed variables from the dataset (need to set G and E variables for this to work, they will be replaced with their proper values later)
 	data=data.frame(data)
@@ -2385,7 +2439,7 @@ stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original
 		if (!is.null(env_extra)) env_extra = env_extra[comp,, drop=FALSE]
 		if (dim(data)[1] <= 0) stop("no valid observation without missing values")
 	}
-	else if (sum(comp)!=length(comp) && print) cat("Note: Missing data was found. This will increase computing time in forward steps \n and could lead to an incorrect subset of variable if the sample size change too much. \n")
+	else if (sum(comp)!=length(comp) && print) cat("Note: Missing data was found. This will increase computing time in forward steps \n and could lead to an incorrect subset of variable if the sample size change too much. \n You can use remove_miss=TRUE to force the removal of missing data. \n")
 
 	if (interactive_mode && print) cat("<<~ Interative mode enabled ~>>\n")
 
@@ -2768,17 +2822,18 @@ stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original
 }
 
 
-stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_original=NULL, latent_var_extra=NULL, search_type="bidirectional-forward", search=0, search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_latent_var=NULL, eps=.01, maxiter=25, family=gaussian, seed=NULL, print=TRUE, remove_miss=FALSE){
+stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_original=NULL, latent_var_extra=NULL, search_type="bidirectional-forward", search=0, search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_latent_var=NULL, eps=.01, maxiter=100, family=gaussian, seed=NULL, print=TRUE, remove_miss=FALSE){
 	k = max(length(latent_var_original),length(latent_var_extra))
 	if (forward_exclude_p_bigger > 1 || forward_exclude_p_bigger <= 0) stop("forward_exclude_p_bigger must be between 0 and 1 (Set to 1 to ignore p-values in forward step)")
 	if (backward_exclude_p_smaller >= 1 || backward_exclude_p_smaller < 0) stop("backward_exclude_p_smaller must be between 0 and 1 (Set to 0 to ignore p-values in backward step)")
 	if (search_criterion=="AIC") string_choice="lowest AIC"
+	else if (search_criterion=="AICc") string_choice="lowest AICc"
 	else if (search_criterion=="BIC") string_choice="lowest BIC"
 	else if (search_criterion=="cv") string_choice="lowest cross-validation error"
 	else if (search_criterion=="cv_Huber") string_choice="lowest cross-validation Huber error"
 	else if (search_criterion=="cv_L1") string_choice="lowest cross-validation L1-norm error"
 	else if (search_criterion=="cv_AUC") string_choice="biggest cross-validated area under the curve"
-	else stop("Not a valid search_criterion, use: AIC, BIC, cv or cv_AUC")
+	else stop("Not a valid search_criterion, use: AIC, AICc, BIC, cv, cv_Huber, cv_L1 or cv_AUC")
 
 	# Retaining only the needed variables from the dataset (need to set G and E variables for this to work, they will be replaced with their proper values later)
 	data=data.frame(data)
@@ -2802,7 +2857,7 @@ stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_
 		}
 		if (dim(data)[1] <= 0) stop("no valid observation without missing values")
 	}
-	else if (sum(comp)!=length(comp) && print) cat("Note: Missing data was found. This will increase computing time in forward steps \n and could lead to an incorrect subset of variable if the sample size change too much. \n")
+	else if (sum(comp)!=length(comp) && print) cat("Note: Missing data was found. This will increase computing time in forward steps \n and could lead to an incorrect subset of variable if the sample size change too much. \n You can use remove_miss=TRUE to force the removal of missing data. \n")
 
 	if (interactive_mode && print) cat("<<~ Interative mode enabled ~>>\n")
 
@@ -3099,7 +3154,7 @@ stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_
 }
 
 
-bootstrap_var_select = function(data, formula, boot_iter=1000, boot_size=NULL, boot_group=NULL, latent_var_original=NULL, latent_var_extra=NULL, search_type="bidirectional-forward", search=0, search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1, classification=FALSE, start_latent_var=NULL, eps=.01, maxiter=25, family=gaussian, seed=NULL, progress=TRUE, n_cluster = 1){
+bootstrap_var_select = function(data, formula, boot_iter=1000, boot_size=NULL, boot_group=NULL, latent_var_original=NULL, latent_var_extra=NULL, search_type="bidirectional-forward", search=0, search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, start_latent_var=NULL, eps=.01, maxiter=100, family=gaussian, seed=NULL, progress=TRUE, n_cluster = 1, best_subsets=5){
 	k = max(length(latent_var_original),length(latent_var_extra))
 	## Removing missing data and checks
 	# Retaining only the needed variables from the dataset (need to set G and E variables for this to work, they will be replaced with their proper values later)
@@ -3138,6 +3193,9 @@ bootstrap_var_select = function(data, formula, boot_iter=1000, boot_size=NULL, b
 		var_select[[i]] = rep(0, NCOL(latent_var_all))
 		names(var_select[[i]]) = colnames(latent_var_all)
 	}
+	# Number of times a subset of variable has appeared
+	subset_count = c()
+
 	# Setting up parallel
 	cl <- snow::makeCluster(n_cluster)
 	doSNOW::registerDoSNOW(cl)
@@ -3147,11 +3205,9 @@ bootstrap_var_select = function(data, formula, boot_iter=1000, boot_size=NULL, b
 		opts <- list(progress = progress)
 	}
 	else opts <- list()
-	# Function for combining results together
-	combine_list <- function(x, y) Map("+", x, y)
 	# Need to use this "with(c(),CODEHERE)" to prevent R check from returning a "no visible binding for global variable"
 	with(c(),{
-		var_select <- foreach::foreach(b = 1:boot_iter, .combine=combine_list, .options.snow = opts) %dopar% {
+		results <- foreach::foreach(b = 1:boot_iter, .options.snow = opts) %dopar% {
 			if (!is.null(seed)) set.seed(seed+b)
 			if (is.null(boot_group)) boot = sample(1:NROW(data),size=boot_size,replace=TRUE)
 			else{
@@ -3185,15 +3241,52 @@ bootstrap_var_select = function(data, formula, boot_iter=1000, boot_size=NULL, b
 		close(pb)
 		snow::stopCluster(cl)
 	})
+	# Counting number of times variables appear
+	var_select = results[[1]]
+	# Keeping list of unique subset of variables and their count
+	unique_subset_string = vector("character",boot_iter)
+	unique_subset = vector("list", boot_iter)
+	unique_subset_count = vector("numeric", boot_iter)
+
+	unique_subset_string[1] = toString(results[[1]])
+	unique_subset[[1]] = results[[1]]
+	names(unique_subset[[1]]) = names(latent_var_original)
+	unique_subset_count[1] = 1
+	max_sub = 1
+
+	for (i in 2:boot_iter){
+		var_select = Map("+", var_select, results[[i]])
+		index_subset = unique_subset_string %in% toString(results[[i]])
+		if (sum(index_subset)==1) unique_subset_count[index_subset] = unique_subset_count[index_subset] + 1
+		else{
+			max_sub = max_sub + 1
+			unique_subset_string[max_sub] = toString(results[[i]])
+			unique_subset[[max_sub]] = results[[i]]
+			unique_subset_count[max_sub] = 1
+			names(unique_subset[[max_sub]]) = names(latent_var_original)
+		}
+	}
+	new_index = order(unique_subset_count,decreasing=TRUE)
+	unique_subset_count = unique_subset_count[new_index]
+	unique_subset = unique_subset[new_index]
 	names(var_select) = names(latent_var_original)
 	for (i in 1:k){
 		if (is.null(latent_var_extra[[i]])) latent_var_all = latent_var_original[[i]]
 		else if (is.null(latent_var_original[[i]])) latent_var_all = latent_var_extra[[i]]
 		else latent_var_all = cbind(latent_var_original[[i]],latent_var_extra[[i]])
 		names(var_select[[i]]) = colnames(latent_var_all)
-		var_select[[i]] = sort(var_select[[i]], decreasing = TRUE)
+		new_index_current = order(var_select[[i]], decreasing = TRUE)
+		var_select[[i]] = var_select[[i]][new_index_current]
+		for (j in 1:max_sub){
+			names(unique_subset[[j]][[i]]) = colnames(latent_var_all)
+			unique_subset[[j]][[i]] = unique_subset[[j]][[i]][new_index_current]
+		}
 		var_select[[i]] = var_select[[i]]/boot_iter
 	}
+	unique_subset = unique_subset[1:min(max_sub,best_subsets)]
+	unique_subset_count=unique_subset_count[1:min(max_sub,best_subsets)]
+	unique_subset_count = unique_subset_count/boot_iter
+	names(unique_subset) = paste0("Subset", seq(1,length(unique_subset)))
 	cat("\nDone\n")
-	return(var_select)
+	return(list(var_select=var_select, subset_select=unique_subset_count, best_subset=unique_subset))
 }
