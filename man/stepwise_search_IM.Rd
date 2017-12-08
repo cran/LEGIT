@@ -10,18 +10,18 @@ stepwise_search_IM(data, formula, interactive_mode = FALSE,
   search_criterion = "AIC", forward_exclude_p_bigger = 0.2,
   backward_exclude_p_smaller = 0.01, exclude_worse_AIC = TRUE,
   max_steps = 100, cv_iter = 5, cv_folds = 10, folds = NULL,
-  Huber_p = 1, classification = FALSE, start_latent_var = NULL,
-  eps = 0.01, maxiter = 100, family = gaussian, seed = NULL,
-  print = TRUE, remove_miss = FALSE)
+  Huber_p = 1.345, classification = FALSE, start_latent_var = NULL,
+  eps = 0.01, maxiter = 100, family = gaussian, ylim = NULL,
+  seed = NULL, print = TRUE, remove_miss = FALSE)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
 
-\item{formula}{Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).}
+\item{formula}{Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).}
 
 \item{interactive_mode}{If TRUE, uses interactive mode. In interactive mode, at each iteration, the user is shown the AIC, BIC, p-value and also the cross-validation \eqn{R^2} if \code{search_criterion="cv"} and the cross-validation AUC if \code{search_criterion="cv_AUC"} for the best 5 variables. The user must then enter a number between 1 and 5 to select the variable to be added, entering anything else will stop the search.}
 
-\item{latent_var_original}{list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise the latent variables will be named L1, L2, ...}
+\item{latent_var_original}{list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...}
 
 \item{latent_var_extra}{list of data.frame (with the same structure as latent_var_original) containing the additionnal elements to try including inside the latent variables. Set to NULL if using a backward search.}
 
@@ -45,7 +45,7 @@ stepwise_search_IM(data, formula, interactive_mode = FALSE,
 
 \item{folds}{Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.}
 
-\item{Huber_p}{Parameter controlling the Huber cross-validation error (Default =1).}
+\item{Huber_p}{Parameter controlling the Huber cross-validation error (Default = 1.345).}
 
 \item{classification}{Set to TRUE if you are doing classification (binary outcome).}
 
@@ -57,6 +57,8 @@ stepwise_search_IM(data, formula, interactive_mode = FALSE,
 
 \item{family}{Outcome distribution and link function (Default = gaussian).}
 
+\item{ylim}{Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).}
+
 \item{seed}{Seed for cross-validation folds.}
 
 \item{print}{If TRUE, print all the steps and notes/warnings. Highly recommended unless you are batch running multiple stepwise searchs. (Default=TRUE).}
@@ -67,7 +69,7 @@ stepwise_search_IM(data, formula, interactive_mode = FALSE,
 Returns an object of the class "IMLEGIT" which is list containing, in the following order: a glm fit of the main model, a list of the glm fits of the latent variables and a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
 }
 \description{
-Adds the best variable or drops the worst variable one at a time in the latent variables. You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
+[Fast, recommended  when the number of variables is small] Adds the best variable or drops the worst variable one at a time in the latent variables. You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. Note that when the number of variables in \emph{G} and \emph{E} is large, this does not generally converge to the optimal subset, this function is only recommended when you have a small number of variables (e.g. 2 environments, 6 genetic variants). If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
 }
 \examples{
 \dontrun{

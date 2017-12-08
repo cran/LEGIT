@@ -10,9 +10,10 @@ stepwise_search(data, formula, interactive_mode = FALSE,
   search = "both", search_criterion = "AIC",
   forward_exclude_p_bigger = 0.2, backward_exclude_p_smaller = 0.01,
   exclude_worse_AIC = TRUE, max_steps = 100, cv_iter = 5, cv_folds = 10,
-  folds = NULL, Huber_p = 1, classification = FALSE, start_genes = NULL,
-  start_env = NULL, eps = 0.01, maxiter = 100, family = gaussian,
-  seed = NULL, print = TRUE, remove_miss = FALSE)
+  folds = NULL, Huber_p = 1.345, classification = FALSE,
+  start_genes = NULL, start_env = NULL, eps = 0.01, maxiter = 100,
+  family = gaussian, ylim = NULL, seed = NULL, print = TRUE,
+  remove_miss = FALSE)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -49,19 +50,21 @@ stepwise_search(data, formula, interactive_mode = FALSE,
 
 \item{folds}{Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.}
 
-\item{Huber_p}{Parameter controlling the Huber cross-validation error (Default =1).}
+\item{Huber_p}{Parameter controlling the Huber cross-validation error (Default = 1.345).}
 
 \item{classification}{Set to TRUE if you are doing classification (binary outcome).}
 
-\item{start_genes}{Optional starting points for genetic score (must be same length as the number of columns of \code{genes}).}
+\item{start_genes}{Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).}
 
-\item{start_env}{Optional starting points for environmental score (must be same length as the number of columns of \code{env}).}
+\item{start_env}{Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).}
 
 \item{eps}{Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).}
 
 \item{maxiter}{Maximum number of iterations.}
 
 \item{family}{Outcome distribution and link function (Default = gaussian).}
+
+\item{ylim}{Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).}
 
 \item{seed}{Seed for cross-validation folds.}
 
@@ -73,7 +76,7 @@ stepwise_search(data, formula, interactive_mode = FALSE,
 Returns an object of the class "LEGIT" which is list containing, in the following order: a glm fit of the main model, a glm fit of the genetic score, a glm fit of the environmental score, a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
 }
 \description{
-Adds the best variable or drops the worst variable one at a time in the genetic (if \code{search="genes"}) or environmental score (if \code{search="env"}). You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
+[Fast, recommended for small number of variables] Adds the best variable or drops the worst variable one at a time in the genetic (if \code{search="genes"}) or environmental score (if \code{search="env"}). You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. Note that when the number of variables in \emph{G} and \emph{E} is large, this does not generally converge to the optimal subset, this function is only recommended when you have a small number of variables (e.g. 2 environments, 6 genetic variants). If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
 }
 \examples{
 \dontrun{

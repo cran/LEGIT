@@ -5,16 +5,16 @@
 \title{Cross-validation for the IMLEGIT model}
 \usage{
 IMLEGIT_cv(data, latent_var, formula, cv_iter = 5, cv_folds = 10,
-  folds = NULL, Huber_p = 1, classification = FALSE,
+  folds = NULL, Huber_p = 1.345, classification = FALSE,
   start_latent_var = NULL, eps = 0.001, maxiter = 100,
-  family = gaussian, seed = NULL, id = NULL)
+  family = gaussian, ylim = NULL, seed = NULL, id = NULL)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
 
-\item{latent_var}{list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise the latent variables will be named L1, L2, ...}
+\item{latent_var}{list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...}
 
-\item{formula}{Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).}
+\item{formula}{Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).}
 
 \item{cv_iter}{Number of cross-validation iterations (Default = 5).}
 
@@ -22,7 +22,7 @@ IMLEGIT_cv(data, latent_var, formula, cv_iter = 5, cv_folds = 10,
 
 \item{folds}{Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.}
 
-\item{Huber_p}{Parameter controlling the Huber cross-validation error (Default =1).}
+\item{Huber_p}{Parameter controlling the Huber cross-validation error (Default = 1.345).}
 
 \item{classification}{Set to TRUE if you are doing classification (binary outcome).}
 
@@ -33,6 +33,8 @@ IMLEGIT_cv(data, latent_var, formula, cv_iter = 5, cv_folds = 10,
 \item{maxiter}{Maximum number of iterations.}
 
 \item{family}{Outcome distribution and link function (Default = gaussian).}
+
+\item{ylim}{Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).}
 
 \item{seed}{Seed for cross-validation folds.}
 
