@@ -1,7 +1,7 @@
 Package: LEGIT
 Title: Latent Environmental & Genetic InTeraction (LEGIT) Model
-Version: 1.2.0
-Date: 2017-12-08
+Version: 1.2.1
+Date: 2018-02-07
 Author: Alexia Jolicoeur-Martineau <alexia.jolicoeur-martineau@mail.mcgill.ca>
 Maintainer: Alexia Jolicoeur-Martineau <alexia.jolicoeur-martineau@mail.mcgill.ca>
 Description: Constructs genotype x environment interaction (GxE) models where
@@ -16,7 +16,7 @@ Description: Constructs genotype x environment interaction (GxE) models where
     highly interpretable results and is very parameter-efficient thus it can even be 
     used with small sample sizes (n < 250). Tools to determine the type of interaction
     (vantage sensitivity, diathesis-stress or differential susceptibility), with any 
-    number of genetic variants or environments, are available <10.17605/OSF.IO/27UW8>.
+    number of genetic variants or environments, are available <arXiv:1712.04058>.
 License: GPL-3
 Imports: pROC, foreach, snow, doSNOW, utils, iterators, Hmisc,
         grDevices, boot, gtools
@@ -25,6 +25,6 @@ RoxygenNote: 6.0.1
 Suggests: knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2017-12-08 19:37:23 UTC; Alexia
+Packaged: 2018-02-07 16:39:16 UTC; alexia.jolicoeur
 Repository: CRAN
-Date/Publication: 2017-12-08 21:56:11 UTC
+Date/Publication: 2018-02-07 17:14:12 UTC
