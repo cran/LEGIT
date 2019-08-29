@@ -1,3 +1,13 @@
+LEGIT v1.31 (Release date: 2019-08-29)
+==============
+
+Changes:
+
+* Automatically makes classification=TRUE when using criterion="cv_AUC" in certain functions that have it as argument
+* Added function to transforms a LEGIT model into a IMLEGIT model (and vice-versa).
+* removed the annoying printing when pROC is called (which meant a lot of annoyance when using "cv_AUC")
+* fixed minor bugs
+
 LEGIT v1.3 (Release date: 2019-07-16)
 ==============
 
