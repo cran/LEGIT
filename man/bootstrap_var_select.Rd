@@ -4,14 +4,32 @@
 \alias{bootstrap_var_select}
 \title{Bootstrap variable selection (for IMLEGIT)}
 \usage{
-bootstrap_var_select(data, formula, boot_iter = 1000, boot_size = NULL,
-  boot_group = NULL, latent_var_original = NULL,
-  latent_var_extra = NULL, search_type = "bidirectional-forward",
-  search = 0, search_criterion = "AIC",
-  forward_exclude_p_bigger = 0.2, backward_exclude_p_smaller = 0.01,
-  exclude_worse_AIC = TRUE, max_steps = 100, start_latent_var = NULL,
-  eps = 0.01, maxiter = 100, family = gaussian, ylim = NULL,
-  seed = NULL, progress = TRUE, n_cluster = 1, best_subsets = 5)
+bootstrap_var_select(
+  data,
+  formula,
+  boot_iter = 1000,
+  boot_size = NULL,
+  boot_group = NULL,
+  latent_var_original = NULL,
+  latent_var_extra = NULL,
+  search_type = "bidirectional-forward",
+  search = 0,
+  search_criterion = "AIC",
+  forward_exclude_p_bigger = 0.2,
+  backward_exclude_p_smaller = 0.01,
+  exclude_worse_AIC = TRUE,
+  max_steps = 100,
+  start_latent_var = NULL,
+  eps = 0.01,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  seed = NULL,
+  progress = TRUE,
+  n_cluster = 1,
+  best_subsets = 5,
+  test_only = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -59,6 +77,8 @@ bootstrap_var_select(data, formula, boot_iter = 1000, boot_size = NULL,
 \item{n_cluster}{Number of parallel clusters, I recommend using the number of CPU cores - 1 (Default = 1).}
 
 \item{best_subsets}{If \code{best_subsets = k}, the output will show the k most frequently chosen subsets of variables (Default = 5)}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
 }
 \value{
 Returns a list of vectors containing the percentage of times that each variable was selected within each latent variable.

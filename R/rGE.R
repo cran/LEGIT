@@ -3,7 +3,8 @@
 #' @param object An object of class "LEGIT" or "IMLEGIT".
 #' @param ... Further arguments passed to or from other methods.
 #' @export
-"rGE"
+
+rGE = function(object, ...) UseMethod("rGE")
 
 #' @title Gene-Environment correlation estimation and testing of LEGIT models
 #' @description Estimates the gene-environment correlation (rGE) and tests for a GxE using a residual environmental score. If there is an important correlation between G and E, the model is still valid prediction-wise but the interpretation is affected as the question becomes: is it really a GxE or a GxG since E is partially caused by G? To account for this, we remove the influence of G on E (If E = b0 + b1*G + e, we use E_resid = E - b1*G) and refit the model to see if the model parameters changed. The residual environmental score (E_resid) is uncorrelated with G. This does not account for passive rGE but only active rGE.
@@ -19,8 +20,17 @@
 #'	fit_rGE = rGE(fit, y ~ G*E)
 #'	fit_rGE
 #'	summary(fit_rGE$fit_main_resid)
-#' @export
-"rGE.LEGIT"
+#' @exportS3Method rGE LEGIT
+
+rGE.LEGIT = function(object, formula, ...){
+	fit_E = stats::lm(object$fit_main$data$E ~ object$fit_main$data$G)
+	# replacing with residual E
+	object$fit_main$data$E = (object$fit_main$data$E - coef(fit_E)[2]*object$fit_main$data$G)
+	fit_resid = stats::glm(formula, data=object$fit_main$data, family=object$fit_main$family, y=FALSE, model=FALSE)
+	#Changed AIC
+	fit_resid$aic = fit_resid$aic + 2*(object$true_model_parameters$rank - fit_resid$rank)
+	return(list(rGE_pearson = Hmisc::rcorr(as.matrix(object$fit_main$data[,c("G","E")]),type="pearson"), rGE_kendall = Hmisc::rcorr(as.matrix(object$fit_main$data[,c("G","E")]),type="spearman"), fit_main_resid=fit_resid))
+}
 
 #' @title Gene-Environment correlation estimation and testing of IMLEGIT models
 #' @description Estimates the gene-environment correlation (rGE) and tests for a GxE using a residual environmental score. If there is an important correlation between G and E, the model is still valid prediction-wise but the interpretation is affected as the question becomes: is it really a GxE or a GxG since E is partially caused by G? To account for this, we remove the influence of G on E (If E = b0 + b1*G + e, we use E_resid = E - b1*G) and refit the model to see if the model parameters changed. The residual environmental score (E_resid) is uncorrelated with G. This does not account for passive rGE but only active rGE.
@@ -44,20 +54,7 @@
 #'	fit_rGE2 = rGE(fit, y ~ G*E, train$latent_var, c(2,3), 1)
 #'	fit_rGE2
 #'	summary(fit_rGE2$fit_main_resid)
-#' @export
-"rGE.IMLEGIT"
-
-rGE = function(object, ...) UseMethod("rGE")
-
-rGE.LEGIT = function(object, formula, ...){
-	fit_E = stats::lm(object$fit_main$data$E ~ object$fit_main$data$G)
-	# replacing with residual E
-	object$fit_main$data$E = (object$fit_main$data$E - coef(fit_E)[2]*object$fit_main$data$G)
-	fit_resid = stats::glm(formula, data=object$fit_main$data, family=object$fit_main$family, y=FALSE, model=FALSE)
-	#Changed AIC
-	fit_resid$aic = fit_resid$aic + 2*(object$true_model_parameters$rank - fit_resid$rank)
-	return(list(rGE_pearson = Hmisc::rcorr(as.matrix(object$fit_main$data[,c("G","E")]),type="pearson"), rGE_kendall = Hmisc::rcorr(as.matrix(object$fit_main$data[,c("G","E")]),type="spearman"), fit_main_resid=fit_resid))
-}
+#' @exportS3Method rGE IMLEGIT
 
 rGE.IMLEGIT = function(object, formula, latent_var, index_E, index_G, ...){
 	if (length(index_G) > 1) stop("index_G must be a single latent variable")

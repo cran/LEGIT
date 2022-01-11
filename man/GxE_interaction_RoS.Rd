@@ -4,9 +4,20 @@
 \alias{GxE_interaction_RoS}
 \title{Regions of significance using Johnson-Neyman technique}
 \usage{
-GxE_interaction_RoS(data, genes, env, formula_noGxE, t_alpha = 0.05,
-  start_genes = NULL, start_env = NULL, eps = 0.001, maxiter = 100,
-  ylim = NULL, reverse_code = FALSE, rescale = FALSE)
+GxE_interaction_RoS(
+  data,
+  genes,
+  env,
+  formula_noGxE,
+  t_alpha = 0.05,
+  start_genes = NULL,
+  start_env = NULL,
+  eps = 0.001,
+  maxiter = 100,
+  ylim = NULL,
+  reverse_code = FALSE,
+  rescale = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}

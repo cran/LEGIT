@@ -4,13 +4,32 @@
 \alias{r1nes_var_select}
 \title{Parallel natural evolutionary variable selection assuming multivariate normal search distribution with a simple covariance matrix parametrization (for IMLEGIT)}
 \usage{
-r1nes_var_select(data, formula, parallel_iter = 3, alpha = c(1, 5, 10),
-  entropy_threshold = 0.05, popsize = 25, lr = 0.2,
-  prop_ignored = 0.5, latent_var = NULL, search_criterion = "AICc",
-  n_cluster = 3, eps = 0.01, maxiter = 100, family = gaussian,
-  ylim = NULL, seed = NULL, progress = TRUE, cv_iter = 5,
-  cv_folds = 5, folds = NULL, Huber_p = 1.345,
-  classification = FALSE, print = FALSE)
+r1nes_var_select(
+  data,
+  formula,
+  parallel_iter = 3,
+  alpha = c(1, 5, 10),
+  entropy_threshold = 0.05,
+  popsize = 25,
+  lr = 0.2,
+  prop_ignored = 0.5,
+  latent_var = NULL,
+  search_criterion = "AICc",
+  n_cluster = 3,
+  eps = 0.01,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  seed = NULL,
+  progress = TRUE,
+  cv_iter = 5,
+  cv_folds = 5,
+  folds = NULL,
+  Huber_p = 1.345,
+  classification = FALSE,
+  print = FALSE,
+  test_only = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -58,6 +77,8 @@ r1nes_var_select(data, formula, parallel_iter = 3, alpha = c(1, 5, 10),
 \item{classification}{Set to TRUE if you are doing classification and cross-validation (binary outcome).}
 
 \item{print}{If TRUE, print the parameters of the search distribution and the entropy at each iteration. Note: Only works using Rterm.exe in Windows due to parallel clusters. (Default = FALSE).}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
 }
 \value{
 Returns a list containing the best subset's fit, cross-validation output, latent variables and starting points.

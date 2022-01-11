@@ -4,13 +4,31 @@
 \alias{elastic_net_var_select}
 \title{Elastic net for variable selection in IMLEGIT model}
 \usage{
-elastic_net_var_select(data, latent_var, formula,
-  latent_var_searched = NULL, cross_validation = FALSE, alpha = 0.75,
-  standardize = TRUE, lambda_path = NULL, lambda_mult = 1,
-  lambda_min = 1e-04, n_lambda = 100, start_latent_var = NULL,
-  eps = 0.001, maxiter = 100, family = gaussian, ylim = NULL,
-  cv_iter = 5, cv_folds = 10, folds = NULL, Huber_p = 1.345,
-  classification = FALSE, print = TRUE)
+elastic_net_var_select(
+  data,
+  latent_var,
+  formula,
+  latent_var_searched = NULL,
+  cross_validation = FALSE,
+  alpha = 0.75,
+  standardize = TRUE,
+  lambda_path = NULL,
+  lambda_mult = 1,
+  lambda_min = 1e-04,
+  n_lambda = 100,
+  start_latent_var = NULL,
+  eps = 0.001,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  cv_iter = 5,
+  cv_folds = 10,
+  folds = NULL,
+  Huber_p = 1.345,
+  classification = FALSE,
+  print = TRUE,
+  test_only = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -56,6 +74,8 @@ elastic_net_var_select(data, latent_var, formula,
 \item{classification}{Set to TRUE if you are doing classification (binary outcome).}
 
 \item{print}{If FALSE, nothing except warnings will be printed. (Default = TRUE).}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
 }
 \value{
 Returns an object of the class "elastic_net_var_select" which is list containing, in the following order: the criterion at each lambda, the coefficients of the latent variables at each lambda, the fits of each IMLEGIT models for each variable retained at each lambda, and the vector of lambda used.

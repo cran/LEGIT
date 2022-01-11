@@ -4,10 +4,24 @@
 \alias{IMLEGIT_cv}
 \title{Cross-validation for the IMLEGIT model}
 \usage{
-IMLEGIT_cv(data, latent_var, formula, cv_iter = 5, cv_folds = 10,
-  folds = NULL, Huber_p = 1.345, classification = FALSE,
-  start_latent_var = NULL, eps = 0.001, maxiter = 100,
-  family = gaussian, ylim = NULL, seed = NULL, id = NULL)
+IMLEGIT_cv(
+  data,
+  latent_var,
+  formula,
+  cv_iter = 5,
+  cv_folds = 10,
+  folds = NULL,
+  Huber_p = 1.345,
+  classification = FALSE,
+  start_latent_var = NULL,
+  eps = 0.001,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  seed = NULL,
+  id = NULL,
+  test_only = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -39,6 +53,8 @@ IMLEGIT_cv(data, latent_var, formula, cv_iter = 5, cv_folds = 10,
 \item{seed}{Seed for cross-validation folds.}
 
 \item{id}{Optional id of observations, can be a vector or data.frame (only used when returning list of possible outliers).}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
 }
 \value{
 If \code{classification} = FALSE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a matrix of the possible outliers (standardized residuals > 2.5 or < -2.5) and their corresponding standardized residuals and standardized pearson residuals. If \code{classification} = TRUE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a vector of the AUC at each iteration, a matrix of the best choice of threshold (based on Youden index) and the corresponding specificity and sensitivity at each iteration, and a list of objects of class "roc" (to be able to make roc curve plots) at each iteration. The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.

@@ -4,8 +4,15 @@
 \alias{longitudinal_folds}
 \title{Longitudinal folds}
 \usage{
-longitudinal_folds(cv_iter = 1, cv_folds = 10, id, formula = NULL,
-  data = NULL, data_needed = NULL, print = TRUE)
+longitudinal_folds(
+  cv_iter = 1,
+  cv_folds = 10,
+  id,
+  formula = NULL,
+  data = NULL,
+  data_needed = NULL,
+  print = TRUE
+)
 }
 \arguments{
 \item{cv_iter}{Number of cross-validation iterations (Default = 1).}

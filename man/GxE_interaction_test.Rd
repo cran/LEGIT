@@ -4,13 +4,33 @@
 \alias{GxE_interaction_test}
 \title{Testing of the GxE interaction}
 \usage{
-GxE_interaction_test(data, genes, env, formula_noGxE,
-  crossover = c("min", "max"), include_noGxE_models = TRUE,
-  reverse_code = FALSE, rescale = FALSE, boot = NULL,
-  criterion = "BIC", start_genes = NULL, start_env = NULL,
-  eps = 0.001, maxiter = 100, family = gaussian, ylim = NULL,
-  cv_iter = 5, cv_folds = 10, folds = NULL, Huber_p = 1.345,
-  id = NULL, classification = FALSE, seed = NULL)
+GxE_interaction_test(
+  data,
+  genes,
+  env,
+  formula_noGxE,
+  crossover = c("min", "max"),
+  include_noGxE_models = TRUE,
+  reverse_code = FALSE,
+  rescale = FALSE,
+  boot = NULL,
+  criterion = "BIC",
+  start_genes = NULL,
+  start_env = NULL,
+  eps = 0.001,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  cv_iter = 5,
+  cv_folds = 10,
+  folds = NULL,
+  Huber_p = 1.345,
+  id = NULL,
+  classification = FALSE,
+  seed = NULL,
+  test_only = FALSE,
+  lme4 = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -58,6 +78,10 @@ GxE_interaction_test(data, genes, env, formula_noGxE,
 \item{classification}{Set to TRUE if you are doing classification (binary outcome).}
 
 \item{seed}{Seed for cross-validation folds.}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
+
+\item{lme4}{If TRUE, uses lme4::lmer or lme4::glmer; Note that is an experimental feature, bugs may arise and certain functions may fail. Currently only summary(), plot(), GxE_interaction_test(), LEGIT(), LEGIT_cv() work. Also note that the AIC and certain elements ignore the existence of the genes and environment variables, thus the AIC may not be used for variable selection of the genes and the environment. However, the AIC can still be used to compare models with the same genes and environments. (Default=FALSE).}
 }
 \value{
 Returns a list containing 1) the six models ordered from best to worse (vantage sensitivity WEAK/STRONG, diathesis-stress WEAK/STRONG, differential susceptibility WEAK/STRONG) and 2) a data frame with the criterion, the crossover, 95\% coverage of the crossover, whether the crossover 95\% interval is within the observable range and the percentage of observations below the crossover point in order from best to worst based on the selected criterion. Models not within the observable range should be rejected even if the criterion is slightly better. An extremely low percentage of observations below the crossover point is also evidence toward diathesis-stress. Note that we assume that the environmental score is from bad to good but if this is not the case, then the models labelled as "diathesis-stress" could actually reflect vantage sensitivity and vice-versa. If outcome is Good-to-Bad: C=min(E) is diathesis-stress, C=max(E) is vantage sensitivity. If outcome is Bad-to-Good: C=max(E) is diathesis-stress, C=min(E) is vantage sensitivity.

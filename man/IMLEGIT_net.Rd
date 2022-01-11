@@ -4,12 +4,29 @@
 \alias{IMLEGIT_net}
 \title{Independent Multiple Latent Environmental & Genetic InTeraction (IMLEGIT) model with Elastic Net on the latent variables. Do not use on it's own, use elastic_net_var_select instead.}
 \usage{
-IMLEGIT_net(data, latent_var, formula, latent_var_searched = NULL,
-  cross_validation = FALSE, alpha = 1, lambda = 1e-04,
-  start_latent_var = NULL, eps = 0.001, maxiter = 100,
-  family = gaussian, ylim = NULL, cv_iter = 5, cv_folds = 10,
-  folds = NULL, Huber_p = 1.345, classification = FALSE,
-  print = TRUE, warn = TRUE, family_string = NULL)
+IMLEGIT_net(
+  data,
+  latent_var,
+  formula,
+  latent_var_searched = NULL,
+  cross_validation = FALSE,
+  alpha = 1,
+  lambda = 1e-04,
+  start_latent_var = NULL,
+  eps = 0.001,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  cv_iter = 5,
+  cv_folds = 10,
+  folds = NULL,
+  Huber_p = 1.345,
+  classification = FALSE,
+  print = TRUE,
+  warn = TRUE,
+  family_string = NULL,
+  test_only = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -51,6 +68,8 @@ IMLEGIT_net(data, latent_var, formula, latent_var_searched = NULL,
 \item{warn}{If FALSE, it will not show warnings when all variables inside a latent variable are removed. This serves to prevent lots of warning when running elastic_net_var_select (Default = TRUE).}
 
 \item{family_string}{Optional String version of the family (gaussian leads to "gaussian"). This is only needed when using elastic_net_var_select. Please ignore this.}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
 }
 \value{
 Returns a list containing, in the following order: a IMLEGIT model, the coefficients of the variables in the latent variables from glmnet models, and the cross-validation results (if asked).

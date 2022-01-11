@@ -20,7 +20,31 @@
 #'	example_2way(5,1,logit=FALSE)
 #'	example_2way(5,0,logit=TRUE)
 #' @export
-"example_2way"
+
+example_2way = function(N, sigma=1, logit=FALSE, seed=NULL){
+	set.seed(seed)
+	g1 = rbinom(N,1,.30)
+	g2 = rbinom(N,1,.30)
+	g3 = rbinom(N,1,.30)
+	g4 = rbinom(N,1,.30)
+	g1_g3 = g1*g3
+	g2_g3 = g2*g3
+	e1 = rnorm(N,0,1.5)
+	e2 = rnorm(N,0,1.5)
+	e3 = rnorm(N,0,1.5)
+	g = (.2*g1 + .15*g2 - .3*g3 + .1*g4 + .05*g1_g3 + .2*g2_g3)
+	e = -.45*e1 + .35*e2 + .2*e3
+	y_true = -1 + 2*g + 3*e + 4*g*e
+	if (logit){
+		y_true = 1/(1+exp(-(y_true)))
+		y = rbinom(N,1,y_true)
+	}
+	else{
+		eps = rnorm(N,0,sigma)
+		y = y_true + eps
+	}
+	return(list(data=data.frame(y,y_true),G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2), coef_main=c(-1,2,3,4)))
+}
 
 #' @title Simulated example of a 2 way interaction GxE model with crossover point.
 #' @description Simulated example of a 2 way interaction GxE model with crossover point (where G and E are latent variables). 
@@ -56,7 +80,29 @@
 #' # Differential Susceptibility STRONG
 #' ex_ds_s = example_with_crossover(250, c=5, coef_main = c(3+5,0,2), sigma=1)
 #' @export
-"example_with_crossover"
+
+example_with_crossover = function(N, sigma=1, c = 0, coef_main=c(0,1,2), coef_G=c(.30, .10, .20, .40), coef_E=c(.45,.35,.2), logit=FALSE, seed=NULL, beta_param=c(2,2)){
+	set.seed(seed)
+	g1 = rbinom(N,1,.30)
+	g2 = rbinom(N,1,.30)
+	g3 = rbinom(N,1,.30)
+	g4 = rbinom(N,1,.30)
+	e1 = rbeta(N,beta_param[1],beta_param[2])*10
+	e2 = rbeta(N,beta_param[1],beta_param[2])*10
+	e3 = rbeta(N,beta_param[1],beta_param[2])*10
+	g = coef_G[1]*g1 + coef_G[2]*g2 + coef_G[3]*g3 + coef_G[4]*g4
+	e = coef_E[1]*e1 + coef_E[2]*e2 + coef_E[3]*e3
+	y_true = coef_main[1] + coef_main[2]*(e-c) + coef_main[3]*g*(e-c)
+	if (logit){
+		y_true = 1/(1+exp(-(y_true)))
+		y = rbinom(N,1,y_true)
+	}
+	else{
+		eps = rnorm(N,0,sigma)
+		y = y_true + eps
+	}
+	return(list(data=data.frame(y,y_true),G=data.frame(g1,g2,g3,g4),E=data.frame(e1,e2,e3),coef_G=coef_G,coef_E=coef_E, coef_main=coef_main, c=c))
+}
 
 #' @title Simulated example of a 3 way interaction GxExz model
 #' @description Simulated example of a 3 way interaction GxExz model (where G and E are latent variables). 
@@ -81,1013 +127,6 @@
 #'	example_3way(5,2.5,logit=FALSE)
 #'	example_3way(5,0,logit=TRUE)
 #' @export
-"example_3way"
-
-#' @title Simulated example of a 3 way interaction GxExZ model
-#' @description Simulated example of a 3 way interaction GxExZ model (where G, E and Z are latent variables). 
-#' \deqn{g_j \sim Binomial(n=1,p=.30)}
-#' \deqn{j = 1, 2, 3, 4}
-#' \deqn{e_k \sim Normal(\mu=0,\sigma=1.5)}
-#' \deqn{k = 1, 2, 3}
-#' \deqn{z_l \sim Normal(\mu=3,\sigma=1)}
-#' \deqn{l = 1, 2, 3}
-#' \deqn{g = .2g_1 + .15g_2 - .3g_3 + .1g_4 + .05g_1g_3 + .2g_2g_3}
-#' \deqn{e = -.45e_1 + .35e_2 + .2e_3}
-#' \deqn{z = .15z_1 + .60z_2 + .25z_3}
-#' \deqn{\mu = -2 + 2g + 3e + z + 5ge - 1.5ez + 2gz + 2gez}
-#' \tabular{cc}{
-#' \eqn{y \sim Normal(\mu=\mu,\sigma=\code{sigma})} if \code{logit}=FALSE \cr
-#' \eqn{y \sim Binomial(n=1,p=logit(\mu))} if \code{logit}=TRUE
-#' }
-#' @param N Sample size.
-#' @param sigma Standard deviation of the gaussian noise (if \code{logit}=FALSE).
-#' @param logit If TRUE, the outcome is transformed to binary with a logit link.
-#' @param seed RNG seed.
-#' @return Returns a list containing, in the following order: data.frame with the observed outcome (with noise) and the true outcome (without noise), list containing the data.frame of the genetic variants (G), the data.frame of the \eqn{e} environments (E) and the data.frame of the \eqn{z} environments (Z), vector of the true genetic coefficients, vector of the true \eqn{e} environmental coefficients, vector of the true \eqn{z} environmental coefficients, vector of the true main model coefficients
-#' @examples
-#'	example_3way_3latent(5,1,logit=FALSE)
-#'	example_3way_3latent(5,0,logit=TRUE)
-#' @export
-"example_3way_3latent"
-
-#' @title Longitudinal folds
-#' @description Function to create folds adequately for longitudinal datasets by forcing every observation with the same id to be in the same fold. Can be used with LEGIT_cv to make sure that the cross-validation folds are appropriate when using longitudinal data.
-#' @param cv_iter Number of cross-validation iterations (Default = 1).
-#' @param cv_folds Number of cross-validation folds (Default = 10).
-#' @param id Factor vector containing the id number of each observation.
-#' @param formula Optional Model formula. If data and formula are provided, only the non-missing observations will be used when creating the folds (Put "formula" here if you have missing data).
-#' @param data Optional data.frame used for the formula. If data and formula are provided, only the non-missing observations will be used when creating the folds (Put "data" here if you have missing data).
-#' @param data_needed Optional data.frame with variables that have to be included (Put "cbind(genes,env)"" or "latent_var" here if you have missing data).
-#' @param print If FALSE, nothing except warnings will be printed. (Default = TRUE).
-#' @return Returns a list of vectors containing the fold number for each observation
-#' @examples
-#'	train = example_2way(500, 1, seed=777)
-#'	# Assuming it's longitudinal with 4 timepoints, even though it's not
-#'	id = factor(rep(1:125,each=4))
-#'	fit_cv = LEGIT_cv(train$data, train$G, train$E, y ~ G*E, folds=longitudinal_folds(1,10, id))
-#' @export
-"longitudinal_folds"
-
-#' @title Latent Environmental & Genetic InTeraction (LEGIT) model
-#' @description Constructs a generalized linear model (glm) with a weighted latent environmental score and weighted latent genetic score using alternating optimization.
-#' @param data data.frame of the dataset to be used. 
-#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
-#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
-#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
-#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
-#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param print If FALSE, nothing except warnings will be printed (Default = TRUE).
-#' @param print_steps If TRUE, print the parameters at all iterations, good for debugging (Default = FALSE).
-#' @param crossover If not NULL, estimates the crossover point of \emph{E} using the provided value as starting point (To test for diathesis-stress vs differential susceptibility).
-#' @param crossover_fixed If TRUE, instead of estimating the crossover point of E, we force/fix it to the value of "crossover". (Used when creating a diathes-stress model) (Default = FALSE).
-#' @param reverse_code If TRUE, after fitting the model, the genes with negative weights are reverse coded (ex: \eqn{g_rev} = 1 - \eqn{g}). It assumes that the original coding is in [0,1]. The purpose of this option is to prevent genes with negative weights which cause interpretation problems (ex: depression normally decreases attention but with a negative genetic score, it increases attention). Warning, using this option with GxG interactions could cause nonsensical results since GxG could be inverted. Also note that this may fail with certain models (Default=FALSE).
-#' @param rescale If TRUE, the environmental variables are automatically rescaled to the range [-1,1]. This improves interpretability (Default=FALSE).
-#' @return Returns an object of the class "LEGIT" which is list containing, in the following order: a glm fit of the main model, a glm fit of the genetic score, a glm fit of the environmental score, a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly and the formula.
-#' @examples
-#'	train = example_2way(500, 1, seed=777)
-#'	fit_best = LEGIT(train$data, train$G, train$E, y ~ G*E, train$coef_G, train$coef_E)
-#'	fit_default = LEGIT(train$data, train$G, train$E, y ~ G*E)
-#'	summary(fit_default)
-#'	summary(fit_best)
-#'	train = example_3way(500, 2.5, seed=777)
-#'	fit_best = LEGIT(train$data, train$G, train$E, y ~ G*E*z, train$coef_G, train$coef_E)
-#'	fit_default = LEGIT(train$data, train$G, train$E, y ~ G*E*z)
-#'	summary(fit_default)
-#'	summary(fit_best)
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"LEGIT"
-
-#' @title Testing of the GxE interaction
-#' @description Testing of the GxE interaction using the competitive-confirmatory approach adapted from Belsky, Pluess et Widaman (2013). Reports the different hypotheses (diathesis-stress, vantage-sensitivity, or differential susceptibility), assuming or not assuming a main effect for \emph{E} (WEAK vs STRONG) using the LEGIT model.
-#' @param data data.frame of the dataset to be used. 
-#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
-#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
-#' @param formula_noGxE formula WITHOUT \emph{G} or \emph{E} (y ~ covariates). \emph{G} and \emph{E} will automatically be added properly based on the hypotheses tested.
-#' @param crossover A tuple containting the minimum and maximum of the environment used as crossover point of \emph{E} used in the vantage sensitivity and diathesis-stress models. Instead of providing two number, you can also write c("min","max") to automatically choose the expected minimum or maximum of the environmental score which is calculated based on the min/max of the environments and the current weights.
-#' @param include_noGxE_models If True, we test for models with only G, only E, both G and E, neither G and E (four models without a GxE). This is to verify for false positives, if one of those models has the best fit, then it is possible that there is no GxE, thus no type of GxE. With a single gene and environment, simply looking at the p-value of the GxE is good enough to get around 5-10 percent false positive rate, but with multiple genes and environments, we need to compare model fits to get a low false positive rate. Use your own judgment when using this because if you have multiple genes and environments and small/moderate N, a model without GxE could have a lower BIC but still not be the actual best model. However, if you see little difference in BIC between all 4 GxE models and the non-GxE models have much lower BIC, than it is likely that there is no GxE. Note that this is only implemented for AIC, AICc and BIC. (Default = True)
-#' @param reverse_code If TRUE, after fitting the model, the genes with negative weights are reverse coded (ex: \eqn{g_{rev}} = 1 - \eqn{g}). It assumes that the original coding is in [0,1]. The purpose of this option is to prevent genes with negative weights which cause interpretation problems (ex: depression normally decreases attention but with a negative genetic score, it increases attention). Warning, using this option with GxG interactions could cause nonsensical results since GxG could be inverted. Also note that this may fail with certain models (Default=FALSE).
-#' @param rescale If TRUE, the environmental variables are automatically rescaled to the range [-1,1]. This improves interpretability (Default=FALSE).
-#' @param boot Optional number of bootstrap samples. If not NULL, we use bootstrap to find the confidence interval of the crossover point. This provides more realistic confidence intervals. Make sure to use a bigger number (>= 1000) to get good precision; also note that a too small number could return an error ("estimated adjustment 'a' is NA").
-#' @param criterion Criterion used to assess which model is the best. It can be set to "AIC", "AICc", "BIC", "cv", "cv_AUC", "cv_Huber" (Default="BIC").
-#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
-#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param id Optional id of observations, can be a vector or data.frame (only used when returning list of possible outliers).
-#' @param classification Set to TRUE if you are doing classification (binary outcome).
-#' @param seed Seed for cross-validation folds.
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @return Returns a list containing 1) the six models ordered from best to worse (vantage sensitivity WEAK/STRONG, diathesis-stress WEAK/STRONG, differential susceptibility WEAK/STRONG) and 2) a data frame with the criterion, the crossover, 95\% coverage of the crossover, whether the crossover 95\% interval is within the observable range and the percentage of observations below the crossover point in order from best to worst based on the selected criterion. Models not within the observable range should be rejected even if the criterion is slightly better. An extremely low percentage of observations below the crossover point is also evidence toward diathesis-stress. Note that we assume that the environmental score is from bad to good but if this is not the case, then the models labelled as "diathesis-stress" could actually reflect vantage sensitivity and vice-versa. If outcome is Good-to-Bad: C=min(E) is diathesis-stress, C=max(E) is vantage sensitivity. If outcome is Bad-to-Good: C=max(E) is diathesis-stress, C=min(E) is vantage sensitivity.
-#' @examples
-#' \dontrun{
-#' ## Examples where x is in [0, 10]
-#' # Diathesis Stress WEAK
-#' ex_dia = example_with_crossover(250, c=10, coef_main = c(3,1,2), sigma=1)
-#' # Diathesis Stress STRONG
-#' ex_dia_s = example_with_crossover(250, c=10, coef_main = c(3,0,2), sigma=1)
-#' ## Assuming there is a crossover point at x=5
-#' # Differential Susceptibility WEAK
-#' ex_ds = example_with_crossover(250, c=5, coef_main = c(3+5,1,2), sigma=1)
-#' # Differential Susceptibility STRONG
-#' ex_ds_s = example_with_crossover(250, c=5, coef_main = c(3+5,0,2), sigma=1)
-#' 
-#' ## If true model is "Diathesis Stress WEAK"
-#' GxE_test_BIC = GxE_interaction_test(ex_dia$data, ex_dia$G, ex_dia$E, 
-#' formula_noGxE = y ~ 1, start_genes = ex_dia$coef_G, start_env = ex_dia$coef_E, 
-#' criterion="BIC")
-#' GxE_test_BIC$results
-#' 
-#' ## If true model is "Diathesis Stress STRONG"
-#' GxE_test_BIC = GxE_interaction_test(ex_dia_s$data, ex_dia_s$G, ex_dia_s$E, 
-#' formula_noGxE = y ~ 1, start_genes = ex_dia_s$coef_G, start_env = ex_dia_s$coef_E, 
-#' criterion="BIC")
-#' GxE_test_BIC$results
-#' 
-#' ## If true model is "Differential susceptibility WEAK"
-#' GxE_test_BIC = GxE_interaction_test(ex_ds$data, ex_ds$G, ex_ds$E, 
-#' formula_noGxE = y ~ 1, start_genes = ex_ds$coef_G, start_env = ex_ds$coef_E, 
-#' criterion="BIC")
-#' GxE_test_BIC$results
-#' 
-#' ## If true model is "Differential susceptibility STRONG"
-#' GxE_test_BIC = GxE_interaction_test(ex_ds_s$data, ex_ds_s$G, ex_ds_s$E, 
-#' formula_noGxE = y ~ 1, start_genes = ex_ds_s$coef_G, start_env = ex_ds_s$coef_E,
-#' criterion="BIC")
-#' GxE_test_BIC$results
-#' 
-#' # Example of plots
-#' plot(GxE_test_BIC$fits$diff_suscept_STRONG, xlim=c(0,10), ylim=c(3,13))
-#' plot(GxE_test_BIC$fits$diff_suscept_WEAK, xlim=c(0,10), ylim=c(3,13))
-#' plot(GxE_test_BIC$fits$diathesis_stress_STRONG, xlim=c(0,10), ylim=c(3,13))
-#' plot(GxE_test_BIC$fits$diathesis_stress_WEAK, xlim=c(0,10), ylim=c(3,13))
-#' }
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). psyarxiv.com/27uw8. 10.17605/OSF.IO/27UW8.
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @references Jay Belsky, Michael Pluess and Keith F. Widaman. \emph{Confirmatory and competitive evaluation of alternative gene-environment interaction hypotheses} (2013). Journal of Child Psychology and Psychiatry, 54(10), 1135-1143.
-#' @export
-"GxE_interaction_test"
-
-#' @title Regions of significance using Johnson-Neyman technique
-#' @description Constructs a LEGIT model and returns the regions of significance (RoS) with the predicted type of interaction (diathesis-stress, vantage-sensitivity, or differential susceptibility). RoS is not recommended due to poor accuracy with small samples and small effect sizes, GxE_interaction_test has much better accuracy overall. Only implemented for family=gaussian.
-#' @param data data.frame of the dataset to be used. 
-#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
-#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
-#' @param formula_noGxE formula WITHOUT \emph{G} or \emph{E} (y ~ covariates). \emph{G} and \emph{E} will automatically be added.
-#' @param t_alpha Alpha level of the student-t distribution for the regions of significance (Default = .05)
-#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
-#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param reverse_code If TRUE, after fitting the model, the genes with negative weights are reverse coded (ex: \eqn{g_rev} = 1 - \eqn{g}). It assumes that the original coding is in [0,1]. The purpose of this option is to prevent genes with negative weights which cause interpretation problems (ex: depression normally decreases attention but with a negative genetic score, it increases attention). Warning, using this option with GxG interactions could cause nonsensical results since GxG could be inverted. Also note that this may fail with certain models (Default=FALSE).
-#' @param rescale If TRUE, the environmental variables are automatically rescaled to the range [-1,1]. This improves interpretability (Default=FALSE).
-#' @return Returns a list containing the RoS and the predicted type of interaction.
-#' @examples
-#'	train = example_2way(500, 1, seed=777)
-#'	ros = GxE_interaction_RoS(train$data, train$G, train$E, y ~ 1)
-#'	ros
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). psyarxiv.com/27uw8. 10.17605/OSF.IO/27UW8.
-#' @references  Daniel J. Bauer & Patrick J. Curran. \emph{Probing Interactions in Fixed and Multilevel Regression: Inferential and Graphical Techniques} (2005). Multivariate Behavioral Research, 40:3, 373-400, DOI: 10.1207/s15327906mbr4003_5.
-#' @export
-"GxE_interaction_RoS"
-
-#' @title Plot
-#' @description Plot of LEGIT models. By default, variables that are not in \emph{G} or \emph{E} are fixed to the mean.
-#' @param x An object of class "LEGIT", usually, a result of a call to LEGIT.
-#' @param cov_values Vector of the values, for each covariate, that will be used in the plotting, if there are any covariates. It must contain the names of the variables. Covariates are the variables that are not \emph{G} nor \emph{E} but still are adjusted for in the model. By default, covariates are fixed to the mean.
-#' @param gene_quant Vector of the genes quantiles used to make the plot. We use quantiles instead of fixed values because genetic scores can vary widely depending on the weights, thus looking at quantiles make this simpler. (Default = c(.025,.50,.975))
-#' @param env_quant Vector of the environments quantiles used to make the plot. We use quantiles instead of fixed values because environmental scores can vary widely depending on the weights, thus looking at quantiles make this simpler. (Default = c(.025,.50,.975))
-#' @param outcome_quant Vector of the outcome quantiles used to make the plot. We use quantiles instead of fixed values because environmental scores can vary widely depending on the weights, thus looking at quantiles make this simpler. (Default = c(.025,.50,.975))
-#' @param cols Colors for the slopes with different genetic score. Must be a vector same length as "gene_range". (Default = c("#3288BD", "#CAB176", #D53E4F"))
-#' @param ylab Y-axis label (Default = "Outcome")
-#' @param xlab X-axis label (Default = "Environment")
-#' @param legtitle Title of the Legend for the genes slopes label (Default = "Genetic score")
-#' @param leglab Optional vector of labels of the Legend for the genes slopes label
-#' @param cex.axis relative scale of axis (Default = 1.9)
-#' @param cex.lab relative scale of labels (Default = 2)
-#' @param cex.main relative scale overall (Default = 2.2)
-#' @param cex.leg relative scale of legend (Default = 2.2)
-#' @param xlim X-axis vector of size two with min and max (Default = NULL which leads to min="2.5 percentile" and max="97.5 percentile").
-#' @param ylim Y-axis vector of size two with min and max (Default = NULL which leads to min="2.5 percentile" and max="97.5 percentile").
-#' @param x_at specific ticks for the X-axis, first and last will be min and max respectively (Default = NULL which leads to 2.5, 50 and 97.5 percentiles).
-#' @param y_at specific ticks for the Y-axis, first and last will be min and max respectively (Default = NULL which leads to 2.5, 50 and 97.5 percentiles).
-#' @param legend The location may of the legend be specified by setting legend to a single keyword from the list "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right" and "center" (Default = "topleft").
-#' @return Returns a list containing the different models (diathesis-stress, differential susceptibility and vantage sensitivity WEAK or STRONG) in order from best to worst for each selected criterion.
-#' @param ... Further arguments passed to or from other methods.
-#' @examples
-#'	train = example_2way(500, 1, seed=777)
-#'	fit = LEGIT(train$data, train$G, train$E, y ~ G*E, train$coef_G, train$coef_E)
-#'	plot(fit)
-#' @import formula.tools graphics
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"plot.LEGIT"
-
-#' @title Independent Multiple Latent Environmental & Genetic InTeraction (IMLEGIT) model
-#' @description Constructs a generalized linear model (glm) with latent variables using alternating optimization. This is an extension of the LEGIT model to accommodate more than 2 latent variables.
-#' @param data data.frame of the dataset to be used. 
-#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ... (See examples below for more details)
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param print If FALSE, nothing except warnings will be printed. (Default = TRUE).
-#' @return Returns an object of the class "IMLEGIT" which is list containing, in the following order: a glm fit of the main model, a list of the glm fits of the latent variables and a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
-#' @examples
-#'	train = example_2way(500, 1, seed=777)
-#'	fit_best = IMLEGIT(train$data, list(G=train$G, E=train$E), y ~ G*E, 
-#'	list(train$coef_G, train$coef_E))
-#'	fit_default = IMLEGIT(train$data, list(G=train$G, E=train$E), y ~ G*E)
-#'	summary(fit_default)
-#'	summary(fit_best)
-#'	train = example_3way_3latent(500, 1, seed=777)
-#'	fit_best = IMLEGIT(train$data, train$latent_var, y ~ G*E*Z, 
-#'	list(train$coef_G, train$coef_E, train$coef_Z))
-#'	fit_default = IMLEGIT(train$data, train$latent_var, y ~ G*E*Z)
-#'	summary(fit_default)
-#'	summary(fit_best)
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"IMLEGIT"
-
-#' @title LEGIT to IMLEGIT
-#' @description Transforms a LEGIT model into a IMLEGIT model (Useful if you want to do plot() or GxE_interaction_test() with a model resulting from a variable selection method which gave a IMLEGIT model)
-#' @param fit LEGIT model
-#' @param data data.frame of the dataset to be used. 
-#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
-#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
-#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param print If FALSE, nothing except warnings will be printed (Default = TRUE).
-#' @return Returns an object of the class "IMLEGIT" which is list containing, in the following order: a glm fit of the main model, a list of the glm fits of the latent variables and a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
-#' @examples
-#'	train = example_2way(500, 1, seed=777)
-#'	fit = LEGIT(train$data, train$G, train$E, y ~ G*E, train$coef_G, train$coef_E)
-#'	fit_IMLEGIT = LEGIT_to_IMLEGIT(fit,train$data, train$G, train$E, y ~ G*E)
-#'	fit_LEGIT = IMLEGIT_to_LEGIT(fit_IMLEGIT,train$data, train$G, train$E, y ~ G*E)
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"LEGIT_to_IMLEGIT"
-
-#' @title IMLEGIT to LEGIT
-#' @description Transforms a IMLEGIT model into a LEGIT model
-#' @param fit IMLEGIT model
-#' @param data data.frame of the dataset to be used. 
-#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
-#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
-#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param print If FALSE, nothing except warnings will be printed (Default = TRUE).
-#' @return Returns an object of the class "LEGIT" which is list containing, in the following order: a glm fit of the main model, a glm fit of the genetic score, a glm fit of the environmental score, a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly and the formula.
-#' @examples
-#'	train = example_2way(500, 1, seed=777)
-#'	fit = LEGIT(train$data, train$G, train$E, y ~ G*E, train$coef_G, train$coef_E)
-#'	fit_IMLEGIT = LEGIT_to_IMLEGIT(fit,train$data, train$G, train$E, y ~ G*E)
-#'	fit_LEGIT = IMLEGIT_to_LEGIT(fit_IMLEGIT,train$data, train$G, train$E, y ~ G*E)
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"IMLEGIT_to_LEGIT"
-
-#' @title Elastic net for variable selection in IMLEGIT model
-#' @description [Fast and accurate, highly recommended] Apply Elastic Net (from the glmnet package) with IMLEGIT to obtain the order of variable removal that makes the most sense. The output shows the information criterion at every step, so you can decide which variable to retain. It is significantly faster (seconds/minutes instead of hours) than all other variable selection approaches (except for stepwise) and it is very accurate. Note that, as opposed to LEGIT/IMLEGIT, the parameters of variables inside the latent variables are not L1-normalized; instead, its the main model parameters which are L1-normalized. This is needed to make elastic net works. It doesn't matter in the end, because we only care about which variables were removed and we only output the IMLEGIT models without elastic net penalization.
-#' @param data data.frame of the dataset to be used. 
-#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ... (See examples below for more details)
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param latent_var_searched Optional If not null, you must specify a vector containing all indexes of the latent variables you want to use elastic net on. Ex: If latent_var=list(G=genes, E=env), specifying latent_var_search=c(1,2) will use both, latent_var_search=1 will only do it for G, and latent_var_search=2 will only do it for E.
-#' @param cross_validation (Optional) If TRUE, will return cross-validation criterion (slower, but very good criterion).
-#' @param alpha The elasticnet mixing parameter (between 0 and 1). 1 leads to lasso, 0 leads to ridge. See glmnet package manual for more information. We recommend somewhere betwen .50 and 1.
-#' @param standardize If TRUE, standardize all variables inside every latent_var component. Note that if FALSE, glmnet will still standardize and unstandardize, but it will do so for each model (i.e., when at the step of estimating the parameters of latent variable G it standardize them, apply glmnet, then unstandarize them). This means that fixed parameters in the alternating steps are not standardized when standardize=FALSE. In practice, we found that standardize=FALSE leads to weird paths that do not always make sense. In the end, we only care about the order of the variable removal from the glmnet. We highly recommend standardize=TRUE for best results.
-#' @param lambda_path Optional vector of all lambda (penalty term for elastic net, see glmnet package manual). By default, we automatically determine it.
-#' @param lambda_mult scalar which multiplies the maximum lambda (penalty term for elastic net, see glmnet package manual) from the lambda path determined automatically. Sometimes, the maximum lambda found automatically is too big or too small and you may not want to spend the effort to manually set your own lambda path. This is where this comes in, you can simply scale lambda max up or down. (Default = 1)
-#' @param lambda_min minimum lambda (penalty term for elastic net, see glmnet package manual) from the lambda path. (Default = .0001)
-#' @param n_lambda Number of lambda (penalty term for elastic net, see glmnet package manual) in lambda path. Make lower for faster training, or higher for more precision. If you have many variables, make it bigger than 100 (Default = 100).
-#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param classification Set to TRUE if you are doing classification (binary outcome).
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param print If FALSE, nothing except warnings will be printed. (Default = TRUE).
-#' @return Returns an object of the class "elastic_net_var_select" which is list containing, in the following order: the criterion at each lambda, the coefficients of the latent variables at each lambda, the fits of each IMLEGIT models for each variable retained at each lambda, and the vector of lambda used.
-#' @examples
-#'	\dontrun{
-#'	N = 1000
-#'	train = example_3way(N, sigma=1, logit=FALSE, seed=7)
-#'	g1_bad = rbinom(N,1,.30)
-#'	g2_bad = rbinom(N,1,.30)
-#'	g3_bad = rbinom(N,1,.30)
-#'	g4_bad = rbinom(N,1,.30)
-#'	g5_bad = rbinom(N,1,.30)
-#'	train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
-#'	lv = list(G=train$G, E=train$E)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E)
-#'	summary(fit)
-#'	best_model(fit, criterion="BIC")
-#'  # Instead of taking the best, if you want the model with "Model index"=17 from summary, do
-#   fit_mychoice = fit$fit[[17]]
-#'	plot(fit)
-#'	# With Cross-validation
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, cross_validation=TRUE, cv_iter=1, cv_folds=5)
-#'	best_model(fit, criterion="cv_R2")
-#'	# Elastic net only applied on G
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(1))
-#'	# Elastic net only applied on E
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2))
-#'	# Most E variables not removed, use lambda_mult > 1 to remove more
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2), lambda_mult=5)
-#'	# Lasso (only L1 regularization)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, alpha=1)
-#'	# Want more lambdas (useful if # of variables is large)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, n_lambda = 200)
-#'	}
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"elastic_net_var_select"
-
-
-#' @title Independent Multiple Latent Environmental & Genetic InTeraction (IMLEGIT) model with Elastic Net on the latent variables. Do not use on it's own, use elastic_net_var_select instead.
-#' @description Constructs a generalized linear model (glm) with latent variables using alternating optimization. This is an extension of the LEGIT model to accommodate more than 2 latent variables. Note that, as opposed to LEGIT/IMLEGIT, the parameters of variables inside the latent variables are not L1-normalized; instead, its the main model parameters which are L1-normalized. This is needed to make elastic net works. It doesn't matter in the end, because we only care about which variables were removed and we only give the IMLEGIT models without elastic net penalization.
-#' @param data data.frame of the dataset to be used. 
-#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ... (See examples below for more details)
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param latent_var_searched Optional If not null, you must specify a vector containing all indexes of the latent variables you want to use elastic net on. Ex: If latent_var=list(G=genes, E=env), specifying latent_var_search=c(1,2) will use both, latent_var_search=1 will only do it for G, and latent_var_search=2 will only do it for E.
-#' @param cross_validation If TRUE, will return cross-validation criterion (slower)
-#' @param alpha The elasticnet mixing parameter (between 0 and 1). 1 leads to lasso, 0 leads to ridge. See glmnet package manual for more information. We recommend somewhere betwen .50 and 1.
-#' @param lambda Lambda (penalty term for elastic net, see glmnet package manual) (Default = .0001)
-#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param classification Set to TRUE if you are doing classification (binary outcome).
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param print If FALSE, nothing except warnings will be printed. (Default = TRUE).
-#' @param warn If FALSE, it will not show warnings when all variables inside a latent variable are removed. This serves to prevent lots of warning when running elastic_net_var_select (Default = TRUE).
-#' @param family_string Optional String version of the family (gaussian leads to "gaussian"). This is only needed when using elastic_net_var_select. Please ignore this.
-#' @return Returns a list containing, in the following order: a IMLEGIT model, the coefficients of the variables in the latent variables from glmnet models, and the cross-validation results (if asked).
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"IMLEGIT_net"
-
-#' @title Plot function for the output of elastic_net_var_select
-#' @description Plot of the coefficients of variables inside the latent variables with respect to the log(lambda). This is your typical elastic-net plot.
-#' @param x An object of class "elastic_net_var_select", usually, a result of a call to elastic_net_var_select.
-#' @param lwd Thickness of the lines (Default = 2)
-#' @param start At which lambda to start (from large lambda to small lambda). If start is not 1, we remove some of the large lambda, this can make plot easier to visualize (Default = 1).
-#' @param ... Further arguments passed to or from other methods.
-#' @return Returns the plot of the coefficients of variables inside the latent variables with respect to the log(lambda).
-#' @examples
-#'	\dontrun{
-#'	N = 1000
-#'	train = example_3way(N, sigma=1, logit=FALSE, seed=7)
-#'	g1_bad = rbinom(N,1,.30)
-#'	g2_bad = rbinom(N,1,.30)
-#'	g3_bad = rbinom(N,1,.30)
-#'	g4_bad = rbinom(N,1,.30)
-#'	g5_bad = rbinom(N,1,.30)
-#'	train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
-#'	lv = list(G=train$G, E=train$E)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E)
-#'	summary(fit)
-#'	best_model(fit, criterion="BIC")
-#'  # Instead of taking the best, if you want the model with "Model index"=17 from summary, do
-#   fit_mychoice = fit$fit[[17]]
-#'	plot(fit)
-#'	# With Cross-validation
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, cross_validation=TRUE, cv_iter=1, cv_folds=5)
-#'	best_model(fit, criterion="cv_R2")
-#'	# Elastic net only applied on G
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(1))
-#'	# Elastic net only applied on E
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2))
-#'	# Most E variables not removed, use lambda_mult > 1 to remove more
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2), lambda_mult=5)
-#'	# Lasso (only L1 regularization)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, alpha=1)
-#'	# Want more lambdas (useful if # of variables is large)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, n_lambda = 200)
-#'	}
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"plot.elastic_net_var_select"
-
-#' @title Summary function for the output of elastic_net_var_select
-#' @description Summary function for the output of elastic_net_var_select
-#' @param object An object of class "elastic_net_var_select", usually, a result of a call to elastic_net_var_select.
-#' @param ... Further arguments passed to or from other methods.
-#' @return Returns the unique IMLEGIT models resulting from the glmnet path with associated information. Also gives the cross-validation information if asked.
-#' @examples
-#'	\dontrun{
-#'	N = 1000
-#'	train = example_3way(N, sigma=1, logit=FALSE, seed=7)
-#'	g1_bad = rbinom(N,1,.30)
-#'	g2_bad = rbinom(N,1,.30)
-#'	g3_bad = rbinom(N,1,.30)
-#'	g4_bad = rbinom(N,1,.30)
-#'	g5_bad = rbinom(N,1,.30)
-#'	train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
-#'	lv = list(G=train$G, E=train$E)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E)
-#'	summary(fit)
-#'	best_model(fit, criterion="BIC")
-#'  # Instead of taking the best, if you want the model with "Model index"=17 from summary, do
-#   fit_mychoice = fit$fit[[17]]
-#'	plot(fit)
-#'	# With Cross-validation
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, cross_validation=TRUE, cv_iter=1, cv_folds=5)
-#'	best_model(fit, criterion="cv_R2")
-#'	# Elastic net only applied on G
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(1))
-#'	# Elastic net only applied on E
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2))
-#'	# Most E variables not removed, use lambda_mult > 1 to remove more
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2), lambda_mult=5)
-#'	# Lasso (only L1 regularization)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, alpha=1)
-#'	# Want more lambdas (useful if # of variables is large)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, n_lambda = 200)
-#'	}
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"summary.elastic_net_var_select"
-
-#' @title Best model
-#' @description Best model
-#' @param object An object
-#' @param ... Further arguments passed to or from other methods.
-#' @return Best model
-#' @export
-"best_model"
-
-#' @title Best model from elastic net variable selection
-#' @description Best model from elastic net variable selection (based on selected criteria)
-#' @param object An object of class "elastic_net_var_select", usually, a result of a call to elastic_net_var_select.
-#' @param criterion Criteria used to determine which model is the best. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv_R2"}, uses the cross-validation R-squared, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers. For all criterion, lower is better, with the exception of \code{search_criterion="cv_R2"} and \code{search_criterion="cv_AUC"}.
-#' @param ... Further arguments passed to or from other methods.
-#' @return Returns the best IMLEGIT model resulting from the glmnet path with associated information.
-#' @examples
-#'	\dontrun{
-#'	N = 1000
-#'	train = example_3way(N, sigma=1, logit=FALSE, seed=7)
-#'	g1_bad = rbinom(N,1,.30)
-#'	g2_bad = rbinom(N,1,.30)
-#'	g3_bad = rbinom(N,1,.30)
-#'	g4_bad = rbinom(N,1,.30)
-#'	g5_bad = rbinom(N,1,.30)
-#'	train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
-#'	lv = list(G=train$G, E=train$E)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E)
-#'	summary(fit)
-#'	best_model(fit, criterion="BIC")
-#'  # Instead of taking the best, if you want the model with "Model index"=17 from summary, do
-#   fit_mychoice = fit$fit[[17]]
-#'	plot(fit)
-#'	# With Cross-validation
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, cross_validation=TRUE, cv_iter=1, cv_folds=5)
-#'	best_model(fit, criterion="cv_R2")
-#'	# Elastic net only applied on G
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(1))
-#'	# Elastic net only applied on E
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2))
-#'	# Most E variables not removed, use lambda_mult > 1 to remove more
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2), lambda_mult=5)
-#'	# Lasso (only L1 regularization)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, alpha=1)
-#'	# Want more lambdas (useful if # of variables is large)
-#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, n_lambda = 200)
-#'	}
-#' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
-#' @export
-"best_model.elastic_net_var_select"
-
-#' @title Predictions of LEGIT fits
-#' @description Predictions of LEGIT fits.
-#' @param object An object of class "LEGIT", usually, a result of a call to LEGIT.
-#' @param data data.frame of the dataset to be used.
-#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
-#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
-#' @param ... Further arguments passed to or from other methods.
-#' @return Returns a vector with the predicted values.
-#' @examples
-#'	train = example_2way(250, 1, seed=777)
-#'	test = example_2way(100, 1, seed=666)
-#'	fit = LEGIT(train$data, train$G, train$E, y ~ G*E)
-#'	ssres = sum((test$data$y - predict(fit, test$data, test$G, test$E))^2)
-#'	sstotal = sum((test$data$y - mean(test$data$y))^2)
-#'	R2 = 1 - ssres/sstotal
-#' @export
-"predict.LEGIT"
-
-#' @title Predictions of IMLEGIT fits
-#' @description Predictions of IMLEGIT fits.
-#' @param object An object of class "IMLEGIT", usually, a result of a call to IMLEGIT.
-#' @param data data.frame of the dataset to be used.
-#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
-#' @param ... Further arguments passed to or from other methods.
-#' @return Returns a vector with the predicted values.
-#' @examples
-#'	train = example_2way(250, 1, seed=777)
-#'	test = example_2way(100, 1, seed=666)
-#'	fit = IMLEGIT(train$data, list(G=train$G, E=train$E), y ~ G*E)
-#'	ssres = sum((test$data$y - predict(fit, test$data, list(G=test$G, E=test$E)))^2)
-#'	sstotal = sum((test$data$y - mean(test$data$y))^2)
-#'	R2 = 1 - ssres/sstotal
-#'	R2
-#' @export
-"predict.IMLEGIT"
-
-#' @title Summarizing LEGIT fits
-#' @description Shows the summary for all parts (main, genetic, environmental) of the LEGIT model.
-#' @param object An object of class "LEGIT", usually, a result of a call to LEGIT.
-#' @param ... Further arguments passed to or from other methods.
-#' @return Returns a list of objects of class "summary.glm" containing the summary of each parts (main, genetic, environmental) of the model.
-#' @examples
-#' 	train = example_2way(250, 1, seed=777)
-#'	fit_default = LEGIT(train$data, train$G, train$E, y ~ G*E)
-#'	summary(fit_default)
-#' @export
-"summary.LEGIT"
-
-#' @title Summarizing IMLEGIT fits
-#' @description Shows the summary for all parts (main and latent variables) of the LEGIT model.
-#' @param object An object of class "IMLEGIT", usually, a result of a call to IMLEGIT.
-#' @param ... Further arguments passed to or from other methods.
-#' @return Returns a list of objects of class "summary.glm" containing the summary of each parts (main and latent variables) of the model.
-#' @examples
-#' 	train = example_2way(250, 1, seed=777)
-#'	fit_default = IMLEGIT(train$data, list(G=train$G, E=train$E), y ~ G*E)
-#'	summary(fit_default)
-#' @export
-"summary.IMLEGIT"
-
-#' @title Cross-validation for the LEGIT model
-#' @description Uses cross-validation on the LEGIT model. Note that this is not a very fast implementation since it was written in R.
-#' @param data data.frame of the dataset to be used.
-#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
-#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
-#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param classification Set to TRUE if you are doing classification (binary outcome).
-#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
-#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param seed Seed for cross-validation folds.
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param id Optional id of observations, can be a vector or data.frame (only used when returning list of possible outliers).
-#' @param crossover If not NULL, estimates the crossover point of \emph{E} using the provided value as starting point (To test for diathesis-stress vs differential susceptibility).
-#' @param crossover_fixed If TRUE, instead of estimating the crossover point of E, we force/fix it to the value of "crossover". (Used when creating a diathes-stress model) (Default = FALSE).
-#' @return If \code{classification} = FALSE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a matrix of the possible outliers (standardized residuals > 2.5 or < -2.5) and their corresponding standardized residuals and standardized pearson residuals. If \code{classification} = TRUE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a vector of the AUC at each iteration, a matrix of the best choice of threshold (based on Youden index) and the corresponding specificity and sensitivity at each iteration, and a list of objects of class "roc" (to be able to make roc curve plots) at each iteration. The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @examples
-#'	\dontrun{
-#'	train = example_3way(250, 2.5, seed=777)
-#'	# Cross-validation 4 times with 5 Folds
-#'	cv_5folds = LEGIT_cv(train$data, train$G, train$E, y ~ G*E*z, cv_iter=4, cv_folds=5)
-#'	cv_5folds
-#'	# Leave-one-out cross-validation (Note: very slow)
-#'	cv_loo = LEGIT_cv(train$data, train$G, train$E, y ~ G*E*z, cv_iter=1, cv_folds=250)
-#'	cv_loo
-#'	# Cross-validation 4 times with 5 Folds (binary outcome)
-#'	train_bin = example_2way(500, 2.5, logit=TRUE, seed=777)
-#'	cv_5folds_bin = LEGIT_cv(train_bin$data, train_bin$G, train_bin$E, y ~ G*E, 
-#'	cv_iter=4, cv_folds=5, classification=TRUE, family=binomial)
-#'	cv_5folds_bin
-#'	par(mfrow=c(2,2))
-#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[1]])
-#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[2]])
-#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[3]])
-#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[4]])
-#'	}
-#' @references Denis Heng-Yan Leung. \emph{Cross-validation in nonparametric regression with outliers.} Annals of Statistics (2005): 2291-2310.
-#' @export
-"LEGIT_cv"
-
-#' @title Cross-validation for the IMLEGIT model
-#' @description Uses cross-validation on the IMLEGIT model. Note that this is not a very fast implementation since it was written in R.
-#' @param data data.frame of the dataset to be used.
-#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param classification Set to TRUE if you are doing classification (binary outcome).
-#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param seed Seed for cross-validation folds.
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param id Optional id of observations, can be a vector or data.frame (only used when returning list of possible outliers).
-#' @return If \code{classification} = FALSE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a matrix of the possible outliers (standardized residuals > 2.5 or < -2.5) and their corresponding standardized residuals and standardized pearson residuals. If \code{classification} = TRUE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a vector of the AUC at each iteration, a matrix of the best choice of threshold (based on Youden index) and the corresponding specificity and sensitivity at each iteration, and a list of objects of class "roc" (to be able to make roc curve plots) at each iteration. The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @examples
-#'	\dontrun{
-#'	train = example_3way_3latent(250, 1, seed=777)
-#'	# Cross-validation 4 times with 5 Folds
-#'	cv_5folds = IMLEGIT_cv(train$data, train$latent_var, y ~ G*E*Z, cv_iter=4, cv_folds=5)
-#'	cv_5folds
-#'	# Leave-one-out cross-validation (Note: very slow)
-#'	cv_loo = IMLEGIT_cv(train$data, train$latent_var, y ~ G*E*Z, cv_iter=1, cv_folds=250)
-#'	cv_loo
-#'	# Cross-validation 4 times with 5 Folds (binary outcome)
-#'	train_bin = example_2way(500, 2.5, logit=TRUE, seed=777)
-#'	cv_5folds_bin = IMLEGIT_cv(train_bin$data, list(G=train_bin$G, E=train_bin$E), y ~ G*E, 
-#'	cv_iter=4, cv_folds=5, classification=TRUE, family=binomial)
-#'	cv_5folds_bin
-#'	par(mfrow=c(2,2))
-#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[1]])
-#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[2]])
-#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[3]])
-#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[4]])
-#'	}
-#' @references Denis Heng-Yan Leung. \emph{Cross-validation in nonparametric regression with outliers.} Annals of Statistics (2005): 2291-2310.
-#' @export
-"IMLEGIT_cv"
-
-#' Internal function that does the forward step for the stepwise function.
-#' @param empty_start_dataset If TRUE, the initial dataset is empty.
-#' @param fit Current best fit.
-#' @param ... Same parameters as in the stepwise function.
-#' @return Returns fit, start_genes, start_env and genes_current, genes_toadd if search="genes" or env_current and env_toadd if search="env".
-#' @keywords internal
-"forward_step"
-
-#' Internal function that does the forward step for the stepwise function.
-#' @param empty_start_dataset If TRUE, the initial dataset is empty.
-#' @param fit Current best fit.
-#' @param ... Same parameters as in the stepwise function.
-#' @return Returns fit, start_latent_var, latent_var_current and latent_var_toadd.
-#' @keywords internal
-"forward_step_IM"
-
-#' Internal function that does the backward step for the stepwise IM function.
-#' @param empty_start_dataset If TRUE, the initial dataset is empty.
-#' @param fit Current best fit.
-#' @param ... Same parameters as in the stepwise function.
-#' @return Returns fit, start_genes, start_env and genes_current, genes_dropped if search="genes" or env_current and env_dropped if search="env".
-#' @keywords internal
-"backward_step"
-
-#' Internal function that does the backward step for the stepwise IM function.
-#' @param empty_start_dataset If TRUE, the initial dataset is empty.
-#' @param fit Current best fit.
-#' @param ... Same parameters as in the stepwise function.
-#' @return Returns fit, start_latent_var, latent_var_current and latent_var_dropped.
-#' @keywords internal
-"backward_step_IM"
-
-#' @title Stepwise search for the best subset of genetic variants or environments with the LEGIT model
-#' @description [Fast, recommended for small number of variables] Adds the best variable or drops the worst variable one at a time in the genetic (if \code{search="genes"}) or environmental score (if \code{search="env"}). You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. Note that when the number of variables in \emph{G} and \emph{E} is large, this does not generally converge to the optimal subset, this function is only recommended when you have a small number of variables (e.g. 2 environments, 6 genetic variants). If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
-#' @param data data.frame of the dataset to be used.
-#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
-#' @param interactive_mode If TRUE, uses interactive mode. In interactive mode, at each iteration, the user is shown the AIC, BIC, p-value and also the cross-validation \eqn{R^2} if \code{search_criterion="cv"} and the cross-validation AUC if \code{search_criterion="cv_AUC"} for the best 5 variables. The user must then enter a number between 1 and 5 to select the variable to be added, entering anything else will stop the search.
-#' @param genes_original data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
-#' @param env_original data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
-#' @param genes_extra data.frame of the additionnal variables to try including inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic). Set to NULL if using a backward search.
-#' @param env_extra data.frame of the variables to try including inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental). Set to NULL if using a backward search.
-#' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
-#' @param search If \code{search="genes"}, uses a stepwise search for the genetic score variables. If \code{search="env"}, uses a stepwise search for the environmental score variables. If \code{search="both"}, uses a stepwise search for both the gene and environmental score variables (Default = "both").
-#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
-#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
-#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
-#' @param max_steps Maximum number of steps taken (Default = 50).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param classification Set to TRUE if you are doing classification (binary outcome).
-#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
-#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param seed Seed for cross-validation folds.
-#' @param print If TRUE, print all the steps and notes/warnings. Highly recommended unless you are batch running multiple stepwise searchs. (Default=TRUE).
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param remove_miss If TRUE, remove missing data completely, otherwise missing data is only removed when adding or dropping a variable (Default = FALSE).
-#' @return Returns an object of the class "LEGIT" which is list containing, in the following order: a glm fit of the main model, a glm fit of the genetic score, a glm fit of the environmental score, a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
-#' @examples
-#'	\dontrun{
-#'	## Continuous example
-#'	train = example_3way(250, 2.5, seed=777)
-#'	# Forward search for genes based on BIC (in interactive mode)
-#'	forward_genes_BIC = stepwise_search(train$data, genes_extra=train$G, env_original=train$E,
-#'	formula=y ~ E*G*z,search_type="forward", search="genes", search_criterion="BIC",
-#'	interactive_mode=TRUE)
-#'	# Bidirectional-backward search for environments based on cross-validation error
-#'	bidir_backward_env_cv = stepwise_search(train$data, genes_original=train$G, env_original=train$E,
-#'	formula=y ~ E*G*z,search_type="bidirectional-backward", search="env", search_criterion="cv")
-#'	## Binary example
-#'	train_bin = example_2way(500, 2.5, logit=TRUE, seed=777)
-#'	# Forward search for genes based on cross-validated AUC (in interactive mode)
-#'	forward_genes_AUC = stepwise_search(train_bin$data, genes_extra=train_bin$G, 
-#'	env_original=train_bin$E, formula=y ~ E*G,search_type="forward", search="genes", 
-#'	search_criterion="cv_AUC", classification=TRUE, family=binomial, interactive_mode=TRUE)
-#'	# Forward search for genes based on AIC
-#'	bidir_forward_genes_AIC = stepwise_search(train_bin$data, genes_extra=train_bin$G, 
-#'	env_original=train_bin$E, formula=y ~ E*G,search_type="bidirectional-forward", search="genes", 
-#'	search_criterion="AIC", classification=TRUE, family=binomial)
-#'	}
-#' @export
-"stepwise_search"
-
-#' @title Stepwise search for the best subset of elements in the latent variables with the IMLEGIT model
-#' @description [Fast, recommended  when the number of variables is small] Adds the best variable or drops the worst variable one at a time in the latent variables. You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. Note that when the number of variables in \emph{G} and \emph{E} is large, this does not generally converge to the optimal subset, this function is only recommended when you have a small number of variables (e.g. 2 environments, 6 genetic variants). If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
-#' @param data data.frame of the dataset to be used.
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param interactive_mode If TRUE, uses interactive mode. In interactive mode, at each iteration, the user is shown the AIC, BIC, p-value and also the cross-validation \eqn{R^2} if \code{search_criterion="cv"} and the cross-validation AUC if \code{search_criterion="cv_AUC"} for the best 5 variables. The user must then enter a number between 1 and 5 to select the variable to be added, entering anything else will stop the search.
-#' @param latent_var_original list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
-#' @param latent_var_extra list of data.frame (with the same structure as latent_var_original) containing the additionnal elements to try including inside the latent variables. Set to NULL if using a backward search.
-#' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
-#' @param search If \code{search=0}, uses a stepwise search for all latent variables. Otherwise, if search = i, uses a stepwise search on the i-th latent variable (Default = 0).
-#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
-#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
-#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
-#' @param max_steps Maximum number of steps taken (Default = 50).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param classification Set to TRUE if you are doing classification (binary outcome).
-#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param seed Seed for cross-validation folds.
-#' @param print If TRUE, print all the steps and notes/warnings. Highly recommended unless you are batch running multiple stepwise searchs. (Default=TRUE).
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param remove_miss If TRUE, remove missing data completely, otherwise missing data is only removed when adding or dropping a variable (Default = FALSE).
-#' @return Returns an object of the class "IMLEGIT" which is list containing, in the following order: a glm fit of the main model, a list of the glm fits of the latent variables and a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
-#' @examples
-#'	\dontrun{
-#'	## Example
-#'	train = example_3way_3latent(250, 1, seed=777)
-#'	# Forward search for genes based on BIC (in interactive mode)
-#'	forward_genes_BIC = stepwise_search_IM(train$data, 
-#'	latent_var_original=list(G=NULL, E=train$latent_var$E, Z=train$latent_var$Z),
-#'	latent_var_extra=list(G=train$latent_var$G,E=NULL,Z=NULL), 
-#'	formula=y ~ E*G*Z,search_type="forward", search=1, search_criterion="BIC",
-#'	interactive_mode=TRUE)
-#'	# Bidirectional-backward search for everything based on AIC
-#'	bidir_backward_AIC = stepwise_search_IM(train$data, latent_var_extra=NULL, 
-#'	latent_var_original=train$latent_var,
-#'	formula=y ~ E*G*Z,search_type="bidirectional-backward", search=0, search_criterion="AIC")
-#'	}
-#' @export
-"stepwise_search_IM"
-
-#' @title Bootstrap variable selection (for IMLEGIT)
-#' @description [Very slow, not recommended] Creates bootstrap samples, runs a stepwise search on all of them and then reports the percentage of times that each variable was selected. This is very computationally demanding. With small sample sizes, variable selection can be unstable and bootstrap can be used to give us an idea of the degree of certitude that a variable should be included or not.
-#' @param data data.frame of the dataset to be used.
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param boot_iter number of bootstrap samples (Default = 1000).
-#' @param boot_size Optional size of the bootstrapped samples (Default = number of observations).
-#' @param boot_group Optional vector which represents the group associated with each observation. Sampling will be done by group instead of by observations (very important if you have longitudinal data). The sample sizes of the bootstrap samples might differ by up to "\code{boot_size} - maximum group size" observations.
-#' @param latent_var_original list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
-#' @param latent_var_extra list of data.frame (with the same structure as latent_var_original) containing the additional elements to try including inside the latent variables. Set to NULL if using a backward search.
-#' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
-#' @param search If \code{search=0}, uses a stepwise search for all latent variables. Otherwise, if search = i, uses a stepwise search on the i-th latent variable (Default = 0).
-#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC (Default = "AIC").
-#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
-#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
-#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
-#' @param max_steps Maximum number of steps taken (Default = 50).
-#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
-#' @param maxiter Maximum number of iterations.
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param seed Optional seed for bootstrap.
-#' @param progress If TRUE, shows the progress done (Default=TRUE).
-#' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores - 1 (Default = 1).
-#' @param best_subsets If \code{best_subsets = k}, the output will show the k most frequently chosen subsets of variables (Default = 5)
-#' @return Returns a list of vectors containing the percentage of times that each variable was selected within each latent variable.
-#' @examples
-#'	\dontrun{
-#'	## Example
-#'	train = example_3way_3latent(250, 2, seed=777)
-#'	# Bootstrap with Bidirectional-backward search for everything based on AIC
-#'	# Normally you should use a lot more than 10 iterations and extra CPUs (n_cluster)
-#'	boot = bootstrap_var_select(train$data, latent_var_extra=NULL, 
-#'	latent_var_original=train$latent_var,
-#'	formula=y ~ E*G*Z,search_type="bidirectional-backward", search=0, 
-#'	search_criterion="AIC", boot_iter=10, n_cluster=1)
-#'	# Assuming it's longitudinal with 5 timepoints, even though it's not
-#'	id = factor(rep(1:50,each=5))
-#'	boot_longitudinal = bootstrap_var_select(train$data, latent_var_extra=NULL, 
-#'	latent_var_original=train$latent_var,
-#'	formula=y ~ E*G*Z,search_type="bidirectional-backward", search=0, 
-#'	search_criterion="AIC", boot_iter=10, n_cluster=1, boot_group=id)
-#'	}
-#' @import foreach snow doSNOW utils iterators
-#' @references Peter C Austin and Jack V Tu. \emph{Bootstrap Methods for Developing Predictive Models} (2012). dx.doi.org/10.1198/0003130043277.
-#' @references Mark Reiser, Lanlan Yao, Xiao Wang, Jeanne Wilcox and Shelley Gray. \emph{A Comparison of Bootstrap Confidence Intervals for Multi-level Longitudinal Data Using Monte-Carlo Simulation} (2017). 10.1007/978-981-10-3307-0_17.
-#' @export
-"bootstrap_var_select"
-
-#' @title Parallel genetic algorithm variable selection (for IMLEGIT)
-#' @description [Very slow, recommended when the number of variables is large] Use a standard genetic algorithm with single-point crossover and a single mutation ran in parallel to find the best subset of variables. The percentage of times that each variable is included the final populations is also given. This is very computationally demanding but this finds much better solutions than either stepwise search or bootstrap variable selection.
-#' @param data data.frame of the dataset to be used.
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param parallel_iter number of parallel genetic algorithms (Default = 10). I recommend using 2-4 times the number of CPU cores used.
-#' @param entropy_threshold Entropy threshold for convergence of the population (Default = .10). Note that not reaching the entropy threshold just means that the population has some diversity, this is not necessarily a bad thing. Reaching the threshold is not necessary but if a population reach the threshold, we want it to stop reproducing (rather than continuing until \code{maxgen}) since the future generations won't change much.
-#' @param popsize Size of the population (Default = 25). Between 25 and 100 is generally adequate.
-#' @param mutation_prob Probability of mutation (Default = .50). A single variable is selected for mutation and it is mutated with probability \code{mutation_prob}. If the mutation causes a latent variable to become empty, no mutation is done. Using a small value (close to .05) will lead to getting more stuck in suboptimal solutions but using a large value (close to 1) will greatly increase the computing time because it will have a hard time reaching the entropy threshold.
-#' @param first_pop optional Starting initial population which is used instead of a fully random one. Mutation is also done on the initial population to increase variability.
-#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
-#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @param maxgen Maximum number of generations (iterations) of the genetic algorithm (Default = 100). Between 50 and 200 generations is generally adequate.
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results). Note that using .001 rather than .01 (default) can more than double or triple the computing time of genetic_var_select.
-#' @param maxiter Maximum number of iterations.
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param seed Optional seed.
-#' @param progress If TRUE, shows the progress done (Default=TRUE).
-#' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores - 1 (Default = 1).
-#' @param best_subsets If \code{best_subsets = k}, the output will show the k best subsets of variables (Default = 5)
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param classification Set to TRUE if you are doing classification and cross-validation (binary outcome).
-#' @return Returns a list of vectors containing the percentage of times that each variable was included in the final populations, the criterion of the best k models, the starting points of the best k models (with the names of the best variables) and the entropy of the populations.
-#' @examples
-#'	\dontrun{
-#'	## Example
-#'	train = example_3way_3latent(250, 2, seed=777)
-#'	# Genetic algorithm based on BIC
-#'	# Normally you should use a lot more than 2 populations with 10 generations
-#'	ga = genetic_var_select(train$data, latent_var=train$latent_var,
-#'	formula=y ~ E*G*Z, search_criterion="AIC", parallel_iter=2, maxgen = 10)
-#'	}
-#' @import foreach snow doSNOW utils iterators
-#' @references Mu Zhu, & Hugh Chipman. \emph{Darwinian evolution in parallel universes: A parallel genetic algorithm for variable selection} (2006). Technometrics, 48(4), 491-502.
-#' @export
-"genetic_var_select"
-
-#' @title Parallel natural evolutionary variable selection assuming bernouilli distribution (for IMLEGIT)
-#' @description [Slow, highly recommended when the number of variables is large] Use natural evolution strategy (nes) gradient descent ran in parallel to find the best subset of variables. It is often as good as genetic algorithms but much faster so it is the recommended variable selection function to use as default. Note that this approach assumes that the inclusion of a variable does not depends on whether other variables are included (i.e. it assumes independent bernouilli distributions); this is generally not true but this approach still converge well and running it in parallel increases the probability of reaching the global optimum.
-#' @param data data.frame of the dataset to be used.
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param parallel_iter number of parallel tries (Default = 3). For speed, I recommend using the number of CPU cores.
-#' @param alpha vector of the parameter for the Dirichlet distribution of the starting points (Assuming a symmetric Dirichlet distribution with only one parameter). If the vector has size N and parralel_iter=K, we use alpha[1], ..., alpha[N], alpha[1], ... , alpha[N], ... for parallel_iter 1 to K respectively. We assume a dirichlet distribution for the starting points to get a bit more variability and make sure we are not missing on a great subset of variable that doesn't converge to the global optimum with the default starting points. Use bigger values for less variability and lower values for more variability (Default = c(1,5,10)).
-#' @param entropy_threshold Entropy threshold for convergence of the population (Default = .10). The smaller the entropy is, the less diversity there is in the population, which means convergence.
-#' @param popsize Size of the population, the number of subsets of variables sampled at each iteration (Default = 25). Between 25 and 100 is generally adequate.
-#' @param lr learning rate of the gradient descent, higher will converge faster but more likely to get stuck in local optium (Default = .2).
-#' @param prop_ignored The proportion of the population that are given a fixed fitness value, thus their importance is greatly reduce. The higher it is, the longer it takes to converge. Highers values makes the algorithm focus more on favorizing the good subsets of variables than penalizing the bad subsets (Default = .50).
-#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
-#' @param search_criterion Criterion used to determine which variable subset is the best. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores (Default = 1).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results). Note that using .001 rather than .01 (default) can more than double or triple the computing time of genetic_var_select.
-#' @param maxiter Maximum number of iterations.
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param seed Optional seed.
-#' @param progress If TRUE, shows the progress done (Default=TRUE).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param classification Set to TRUE if you are doing classification and cross-validation (binary outcome).
-#' @param print If TRUE, print the parameters of the search distribution and the entropy at each iteration. Note: Only works using Rterm.exe in Windows due to parallel clusters. (Default = FALSE).
-#' @return Returns a list containing the best subset's fit, cross-validation output, latent variables and starting points.
-#' @examples
-#'	\dontrun{
-#'	## Example
-#'	train = example_3way_3latent(250, 2, seed=777)
-#'	nes = nes_var_select(train$data, latent_var=train$latent_var,
-#'	formula=y ~ E*G*Z)
-#'	}
-#' @import foreach snow doSNOW utils iterators
-#' @export
-"nes_var_select"
-
-#' @title Parallel natural evolutionary variable selection assuming multivariate normal search distribution with a simple covariance matrix parametrization (for IMLEGIT)
-#' @description [Slow, highly recommended when the number of variables is large] Use natural evolution strategy (nes) gradient descent ran in parallel to find the best subset of variables. It is often as good as genetic algorithms but much faster so it is the recommended variable selection function to use as default. This is slower than nes_var_select but much less likely to get stuck into local optimum so the parallelization is not really needed.
-#' @param data data.frame of the dataset to be used.
-#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
-#' @param parallel_iter number of parallel tries (Default = 3). For speed, I recommend using the number of CPU cores.
-#' @param alpha vector of the parameter for the Dirichlet distribution of the starting points (Assuming a symmetric Dirichlet distribution with only one parameter). If the vector has size N and parralel_iter=K, we use alpha[1], ..., alpha[N], alpha[1], ... , alpha[N], ... for parallel_iter 1 to K respectively. We assume a dirichlet distribution for the starting points to get a bit more variability and make sure we are not missing on a great subset of variable that doesn't converge to the global optimum with the default starting points. Use bigger values for less variability and lower values for more variability (Default = c(1,5,10)).
-#' @param entropy_threshold Entropy threshold for convergence of the population (Default = .10). The smaller the entropy is, the less diversity there is in the population, which means convergence.
-#' @param popsize Size of the population, the number of subsets of variables sampled at each iteration (Default = 25). Between 25 and 100 is generally adequate.
-#' @param lr learning rate of the gradient descent, higher will converge faster but more likely to get stuck in local optium (Default = .2).
-#' @param prop_ignored The proportion of the population that are given a fixed fitness value, thus their importance is greatly reduce. The higher it is, the longer it takes to converge. Highers values makes the algorithm focus more on favorizing the good subsets of variables than penalizing the bad subsets (Default = .50).
-#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
-#' @param search_criterion Criterion used to determine which variable subset is the best. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
-#' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores (Default = 1).
-#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results). Note that using .001 rather than .01 (default) can more than double or triple the computing time of genetic_var_select.
-#' @param maxiter Maximum number of iterations.
-#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
-#' @param family Outcome distribution and link function (Default = gaussian).
-#' @param seed Optional seed.
-#' @param progress If TRUE, shows the progress done (Default=TRUE).
-#' @param cv_iter Number of cross-validation iterations (Default = 5).
-#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
-#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
-#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
-#' @param classification Set to TRUE if you are doing classification and cross-validation (binary outcome).
-#' @param print If TRUE, print the parameters of the search distribution and the entropy at each iteration. Note: Only works using Rterm.exe in Windows due to parallel clusters. (Default = FALSE).
-#' @return Returns a list containing the best subset's fit, cross-validation output, latent variables and starting points.
-#' @examples
-#'	\dontrun{
-#'	## Example
-#'	train = example_3way_3latent(250, 2, seed=777)
-#'	nes = r1nes_var_select(train$data, latent_var=train$latent_var,
-#'	formula=y ~ E*G*Z)
-#'	}
-#' @import foreach snow doSNOW utils iterators
-#' @export
-"r1nes_var_select"
-
-example_2way = function(N, sigma=1, logit=FALSE, seed=NULL){
-	set.seed(seed)
-	g1 = rbinom(N,1,.30)
-	g2 = rbinom(N,1,.30)
-	g3 = rbinom(N,1,.30)
-	g4 = rbinom(N,1,.30)
-	g1_g3 = g1*g3
-	g2_g3 = g2*g3
-	e1 = rnorm(N,0,1.5)
-	e2 = rnorm(N,0,1.5)
-	e3 = rnorm(N,0,1.5)
-	g = (.2*g1 + .15*g2 - .3*g3 + .1*g4 + .05*g1_g3 + .2*g2_g3)
-	e = -.45*e1 + .35*e2 + .2*e3
-	y_true = -1 + 2*g + 3*e + 4*g*e
-	if (logit){
-		y_true = 1/(1+exp(-(y_true)))
-		y = rbinom(N,1,y_true)
-	}
-	else{
-		eps = rnorm(N,0,sigma)
-		y = y_true + eps
-	}
-	return(list(data=data.frame(y,y_true),G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2), coef_main=c(-1,2,3,4)))
-}
-
-example_with_crossover = function(N, sigma=1, c = 0, coef_main=c(0,1,2), coef_G=c(.30, .10, .20, .40), coef_E=c(.45,.35,.2), logit=FALSE, seed=NULL, beta_param=c(2,2)){
-	set.seed(seed)
-	g1 = rbinom(N,1,.30)
-	g2 = rbinom(N,1,.30)
-	g3 = rbinom(N,1,.30)
-	g4 = rbinom(N,1,.30)
-	e1 = rbeta(N,beta_param[1],beta_param[2])*10
-	e2 = rbeta(N,beta_param[1],beta_param[2])*10
-	e3 = rbeta(N,beta_param[1],beta_param[2])*10
-	g = coef_G[1]*g1 + coef_G[2]*g2 + coef_G[3]*g3 + coef_G[4]*g4
-	e = coef_E[1]*e1 + coef_E[2]*e2 + coef_E[3]*e3
-	y_true = coef_main[1] + coef_main[2]*(e-c) + coef_main[3]*g*(e-c)
-	if (logit){
-		y_true = 1/(1+exp(-(y_true)))
-		y = rbinom(N,1,y_true)
-	}
-	else{
-		eps = rnorm(N,0,sigma)
-		y = y_true + eps
-	}
-	return(list(data=data.frame(y,y_true),G=data.frame(g1,g2,g3,g4),E=data.frame(e1,e2,e3),coef_G=coef_G,coef_E=coef_E, coef_main=coef_main, c=c))
-}
 
 example_3way = function(N, sigma=2.5, logit=FALSE, seed=NULL){
 	set.seed(seed)
@@ -1114,6 +153,32 @@ example_3way = function(N, sigma=2.5, logit=FALSE, seed=NULL){
 	}
 	return(list(data=data.frame(y,y_true,z),G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2), coef_main=c(-2,2,3,1,5,-1.5,2,2)))
 }
+
+#' @title Simulated example of a 3 way interaction GxExZ model
+#' @description Simulated example of a 3 way interaction GxExZ model (where G, E and Z are latent variables). 
+#' \deqn{g_j \sim Binomial(n=1,p=.30)}
+#' \deqn{j = 1, 2, 3, 4}
+#' \deqn{e_k \sim Normal(\mu=0,\sigma=1.5)}
+#' \deqn{k = 1, 2, 3}
+#' \deqn{z_l \sim Normal(\mu=3,\sigma=1)}
+#' \deqn{l = 1, 2, 3}
+#' \deqn{g = .2g_1 + .15g_2 - .3g_3 + .1g_4 + .05g_1g_3 + .2g_2g_3}
+#' \deqn{e = -.45e_1 + .35e_2 + .2e_3}
+#' \deqn{z = .15z_1 + .60z_2 + .25z_3}
+#' \deqn{\mu = -2 + 2g + 3e + z + 5ge - 1.5ez + 2gz + 2gez}
+#' \tabular{cc}{
+#' \eqn{y \sim Normal(\mu=\mu,\sigma=\code{sigma})} if \code{logit}=FALSE \cr
+#' \eqn{y \sim Binomial(n=1,p=logit(\mu))} if \code{logit}=TRUE
+#' }
+#' @param N Sample size.
+#' @param sigma Standard deviation of the gaussian noise (if \code{logit}=FALSE).
+#' @param logit If TRUE, the outcome is transformed to binary with a logit link.
+#' @param seed RNG seed.
+#' @return Returns a list containing, in the following order: data.frame with the observed outcome (with noise) and the true outcome (without noise), list containing the data.frame of the genetic variants (G), the data.frame of the \eqn{e} environments (E) and the data.frame of the \eqn{z} environments (Z), vector of the true genetic coefficients, vector of the true \eqn{e} environmental coefficients, vector of the true \eqn{z} environmental coefficients, vector of the true main model coefficients
+#' @examples
+#'	example_3way_3latent(5,1,logit=FALSE)
+#'	example_3way_3latent(5,0,logit=TRUE)
+#' @export
 
 example_3way_3latent = function(N, sigma=1, logit=FALSE, seed=NULL){
 	set.seed(seed)
@@ -1143,6 +208,103 @@ example_3way_3latent = function(N, sigma=1, logit=FALSE, seed=NULL){
 	}
 	return(list(data=data.frame(y,y_true),latent_var=list(G=data.frame(g1,g2,g3,g4,g1_g3,g2_g3),E=data.frame(e1,e2,e3),Z=data.frame(z1,z2,z3)),coef_G=c(.2,.15,-.3,.1,.05,.2),coef_E=c(-.45,.35,.2),coef_Z=c(.15,.75,.10), coef_main=c(-2,2,3,1,5,-1.5,2,2)))
 }
+
+#' @title Simulated example of a 3 way interaction GxExZ model
+#' @description Simulated example of a 3 way interaction GxExZ model (where G, E and Z are latent variables). 
+#' \deqn{g_j \sim Binomial(n=1,p=.30)}
+#' \deqn{j = 1, 2, 3, 4}
+#' \deqn{e_k \sim Normal(\mu=0,\sigma=1.5)}
+#' \deqn{k = 1, 2, 3}
+#' \deqn{z_l \sim Normal(\mu=3,\sigma=1)}
+#' \deqn{l = 1, 2, 3}
+#' \deqn{g = .2g_1 + .15g_2 - .3g_3 + .1g_4 + .05g_1g_3 + .2g_2g_3}
+#' \deqn{e = -.45e_1 + .35e_2 + .2e_3}
+#' \deqn{z = .15z_1 + .60z_2 + .25z_3}
+#' \deqn{\mu = -2 + 2g + 3e + z + 5ge - 1.5ez + 2gz + 2gez}
+#' \tabular{cc}{
+#' \eqn{y \sim Normal(\mu=\mu,\sigma=\code{sigma})} if \code{logit}=FALSE \cr
+#' \eqn{y \sim Binomial(n=1,p=logit(\mu))} if \code{logit}=TRUE
+#' }
+#' @param N Sample size.
+#' @param sigma Standard deviation of the gaussian noise (if \code{logit}=FALSE).
+#' @param logit If TRUE, the outcome is transformed to binary with a logit link.
+#' @param seed RNG seed.
+#' @return Returns a list containing, in the following order: data.frame with the observed outcome (with noise) and the true outcome (without noise), list containing the data.frame of the genetic variants (G), the data.frame of the \eqn{e} environments (E) and the data.frame of the \eqn{z} environments (Z), vector of the true genetic coefficients, vector of the true \eqn{e} environmental coefficients, vector of the true \eqn{z} environmental coefficients, vector of the true main model coefficients
+#' @examples
+#' # Doing only one iteration so its faster
+#'	train = example_2way_lme4(250, 1, seed=777)
+#'	D = train$data
+#'	G = train$G
+#'	E = train$E
+#'	
+#'	F = y ~ G*E
+#'	fit = LEGIT(D, G, E, F, lme4=FALSE, maxiter=1)
+#'	summary(fit)
+#'	F = y ~ 1
+#'	fit_test = GxE_interaction_test(D, G, E, F, criterion="AIC", lme4=FALSE, maxiter=1)
+#'	fit_test
+#'	#fit_test = GxE_interaction_test(D, G, E, F, criterion="cv", lme4=FALSE, maxiter=1, cv_iter=1)
+#'	#fit_test
+#'
+#'	F = y ~ G*E + (1|subject)
+#'	fit = LEGIT(D, G, E, F, lme4=TRUE, maxiter=1)
+#'	summary(fit)
+#'	F = y ~ (1|subject)
+#'	fit_test = GxE_interaction_test(D, G, E, F, criterion="AIC", lme4=TRUE, maxiter=1)
+#'	fit_test
+#'	#fit_test = GxE_interaction_test(D, G, E, F, criterion="cv", lme4=TRUE, maxiter=1, cv_iter=1)
+#'	#fit_test
+#' @export
+
+example_2way_lme4 = function (N, sigma = 1, logit = FALSE, seed = NULL) 
+{
+    set.seed(seed)
+    g1 = rbinom(N, 1, 0.3)
+    g2 = rbinom(N, 1, 0.3)
+    g3 = rbinom(N, 1, 0.3)
+    g4 = rbinom(N, 1, 0.3)
+    g1_g3 = g1 * g3
+    g2_g3 = g2 * g3
+    e1 = rnorm(N, 0, 1.5)
+    e2 = rnorm(N, 0, 1.5)
+    e3 = rnorm(N, 0, 1.5)
+    g = (0.2 * g1 + 0.15 * g2 - 0.3 * g3 + 0.1 * g4 + 0.05 * 
+        g1_g3 + 0.2 * g2_g3)
+    e = -0.45 * e1 + 0.35 * e2 + 0.2 * e3
+    y_true = -1 + 2 * g + 3 * e + 4 * g * e
+    if (logit) {
+        y_true = 1/(1 + exp(-(y_true)))
+        y = rbinom(N, 1, y_true)
+        y_true2 = 1/(1 + exp(-(y_true + rnorm(N, 0, 2))))
+        y2 = rbinom(N, 1, y_true2)
+    }
+    else {
+        y = y_true + rnorm(N, 0, sigma)
+        y2 = y + rnorm(N, 0.5, 0.2)
+    }
+    return(list(data = data.frame(y=c(y,y2), time=c(rep(1,N),rep(2,N)), subject=c(1:N,1:N)), G = data.frame(g1=c(g1,g1), 
+        g2=c(g2,g2), g3=c(g3,g3), g4=c(g4,g4), g1_g3=c(g1_g3,g1_g3), g2_g3=c(g2_g3,g2_g3)), 
+    	E = data.frame(e1=c(e1,e1), e2=c(e2,e2), e3=c(e3,e3)), 
+        coef_G = c(0.2, 0.15, -0.3, 0.1, 0.05, 0.2), coef_E = c(-0.45, 
+            0.35, 0.2), coef_main = c(-1, 2, 3, 4)))
+}
+
+#' @title Longitudinal folds
+#' @description Function to create folds adequately for longitudinal datasets by forcing every observation with the same id to be in the same fold. Can be used with LEGIT_cv to make sure that the cross-validation folds are appropriate when using longitudinal data.
+#' @param cv_iter Number of cross-validation iterations (Default = 1).
+#' @param cv_folds Number of cross-validation folds (Default = 10).
+#' @param id Factor vector containing the id number of each observation.
+#' @param formula Optional Model formula. If data and formula are provided, only the non-missing observations will be used when creating the folds (Put "formula" here if you have missing data).
+#' @param data Optional data.frame used for the formula. If data and formula are provided, only the non-missing observations will be used when creating the folds (Put "data" here if you have missing data).
+#' @param data_needed Optional data.frame with variables that have to be included (Put "cbind(genes,env)"" or "latent_var" here if you have missing data).
+#' @param print If FALSE, nothing except warnings will be printed. (Default = TRUE).
+#' @return Returns a list of vectors containing the fold number for each observation
+#' @examples
+#'	train = example_2way(500, 1, seed=777)
+#'	# Assuming it's longitudinal with 4 timepoints, even though it's not
+#'	id = factor(rep(1:125,each=4))
+#'	fit_cv = LEGIT_cv(train$data, train$G, train$E, y ~ G*E, folds=longitudinal_folds(1,10, id))
+#' @export
 
 longitudinal_folds = function(cv_iter=1, cv_folds=10, id, formula=NULL, data=NULL, data_needed=NULL, print=TRUE){
 	if (cv_folds > length(unique(id))) stop("cv_folds must be smaller than the number of unique id")
@@ -1181,7 +343,44 @@ longitudinal_folds = function(cv_iter=1, cv_folds=10, id, formula=NULL, data=NUL
 	return(folds)
 }
 
-LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, print=TRUE, print_steps=FALSE, crossover = NULL, crossover_fixed = FALSE, reverse_code=FALSE, rescale=FALSE)
+#' @title Latent Environmental & Genetic InTeraction (LEGIT) model
+#' @description Constructs a generalized linear model (glm) with a weighted latent environmental score and weighted latent genetic score using alternating optimization.
+#' @param data data.frame of the dataset to be used. 
+#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
+#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
+#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
+#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
+#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param print If FALSE, nothing except warnings will be printed (Default = TRUE).
+#' @param print_steps If TRUE, print the parameters at all iterations, good for debugging (Default = FALSE).
+#' @param crossover If not NULL, estimates the crossover point of \emph{E} using the provided value as starting point (To test for diathesis-stress vs differential susceptibility).
+#' @param crossover_fixed If TRUE, instead of estimating the crossover point of E, we force/fix it to the value of "crossover". (Used when creating a diathes-stress model) (Default = FALSE).
+#' @param reverse_code If TRUE, after fitting the model, the genes with negative weights are reverse coded (ex: \eqn{g_rev} = 1 - \eqn{g}). It assumes that the original coding is in [0,1]. The purpose of this option is to prevent genes with negative weights which cause interpretation problems (ex: depression normally decreases attention but with a negative genetic score, it increases attention). Warning, using this option with GxG interactions could cause nonsensical results since GxG could be inverted. Also note that this may fail with certain models (Default=FALSE).
+#' @param rescale If TRUE, the environmental variables are automatically rescaled to the range [-1,1]. This improves interpretability (Default=FALSE).
+#' @param lme4 If TRUE, uses lme4::lmer or lme4::glmer; Note that is an experimental feature, bugs may arise and certain functions may fail. Currently only summary(), plot(), GxE_interaction_test(), LEGIT(), LEGIT_cv() work. Also note that the AIC and certain elements ignore the existence of the genes and environment variables, thus the AIC may not be used for variable selection of the genes and the environment. However, the AIC can still be used to compare models with the same genes and environments. (Default=FALSE).
+#' @return Returns an object of the class "LEGIT" which is list containing, in the following order: a glm fit of the main model, a glm fit of the genetic score, a glm fit of the environmental score, a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly and the formula.
+#' @examples
+#'	train = example_2way(500, 1, seed=777)
+#'	fit_best = LEGIT(train$data, train$G, train$E, y ~ G*E, train$coef_G, train$coef_E)
+#'	fit_default = LEGIT(train$data, train$G, train$E, y ~ G*E)
+#'	summary(fit_default)
+#'	summary(fit_best)
+#'	
+#'	train = example_3way(500, 2.5, seed=777)
+#'	fit_best = LEGIT(train$data, train$G, train$E, y ~ G*E*z, train$coef_G, train$coef_E)
+#'	fit_default = LEGIT(train$data, train$G, train$E, y ~ G*E*z)
+#'	summary(fit_default)
+#'	summary(fit_best)
+#'
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @export
+
+LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, print=TRUE, print_steps=FALSE, crossover = NULL, crossover_fixed = FALSE, reverse_code=FALSE, rescale=FALSE, lme4=FALSE)
 {
 	if (!is.null(ylim)){
 		if (!is.numeric(ylim) || length(ylim) !=2) stop("ylim must either be NULL or a numeric vector of size two")
@@ -1200,7 +399,20 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 	data=data.frame(data)
 	data$G=0
 	data$E=0
-	data = stats::model.frame(formula, data=data, na.action=na.pass)
+
+	formula = stats::as.formula(formula)
+	# Formula with no random effects
+	formula_norand = gsub("\\s", "", deparse(formula))
+	formula_norand = gsub("\\+\\(.*)","",formula_norand)
+	formula_norand = gsub("\\(.*)","",formula_norand)
+	formula_norand = as.formula(formula_norand)
+	# Formula with rand effect put as fixed effects, so model.frame works
+	formula_wrand = gsub("(","",formula, fixed=TRUE)
+	formula_wrand = gsub(")","",formula_wrand, fixed=TRUE)
+	formula_wrand = gsub("||","+",formula_wrand, fixed=TRUE)
+	formula_wrand = gsub("|","+",formula_wrand, fixed=TRUE)
+	data = stats::model.frame(formula_wrand, data=data, na.action=na.pass)
+
 	genes = as.matrix(genes, drop=FALSE)
 	if (is.null(colnames(genes))){
 		if (print) cat("You have not specified column names for genes, they will be named gene1, gene2, ...\n")
@@ -1266,8 +478,9 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 	if (print_steps) cat(paste0("G: ", paste(round(weights_genes,2), collapse = " "), " // E: ", paste(round(weights_env,2), collapse = " "),"\n"))
 
 	# Deconstructing formula into parts (No E or G / only E / only G / both G and E)
-	formula_full = stats::terms(formula,simplify=TRUE)
-	formula_outcome = get.vars(formula)[1]
+	formula_ = formula_norand
+	formula_full = stats::terms(formula_,simplify=TRUE)
+	formula_outcome = get.vars(formula_)[1]
 	formula_elem_ = attributes(formula_full)$term.labels
 	# Adding white spaces before and after to recognize a "E" as opposed to another string like "Elephant"
 	formula_elem = paste("", formula_elem_,"")
@@ -1276,7 +489,7 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 	index_with_GE = index_with_G & index_with_E
 	index_with_G = index_with_G & !index_with_GE
 	index_with_E = index_with_E & !index_with_GE
-	data_expanded = stats::model.matrix(formula, data=data)
+	data_expanded = stats::model.matrix(formula_, data=data)
 	if (colnames(data_expanded)[1] == "(Intercept)"){
 		formula_elem = c("1",formula_elem)
 		index_with_G = c(FALSE, index_with_G)
@@ -1340,15 +553,26 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 
 	for (i in 1:maxiter){
 
-		## Step a : fit main model
-		fit_a = stats::glm(formula, data=data, family=family, y=FALSE, model=FALSE)
+		## Step a : Fit linear mixed effect model
+		if (lme4){
+			fit_a = stats::glm(formula, data=data, family=family, y=FALSE, model=FALSE)
+			if (family()$family=="gaussian") fit_a = lme4::lmer(formula, data=data)
+			else  fit_a = lme4::glmer(formula, data=data, family=family)
+			rand_effects = predict(fit_a, data, re.form = NULL) - predict(fit_a, data, re.form = NA) # We need to fix this part
+			fit_a_coef = lme4::fixef(fit_a)
+		}
+		else{ # fit main model
+			fit_a = stats::glm(formula, data=data, family=family, y=FALSE, model=FALSE) 
+			rand_effects = 0
+			fit_a_coef = stats::coef(fit_a)
+		}
 
 		if (NCOL(genes)>1){
 			# Reparametrizing variables for step b (estimating G)
 			data_expanded_withoutG = stats::model.matrix(formula_withoutG, data=data)
-			data$R0_b = data_expanded_withoutG%*%stats::coef(fit_a)[(index_without_GE | index_with_E)]
+			data$R0_b = data_expanded_withoutG%*%fit_a_coef[(index_without_GE | index_with_E)] + rand_effects
 			data_expanded_withG = stats::model.matrix(formula_withG, data=data)
-			R1_b = data_expanded_withG%*%stats::coef(fit_a)[(index_with_G | index_with_GE)]
+			R1_b = data_expanded_withG%*%fit_a_coef[(index_with_G | index_with_GE)]
 			R1_b_genes = genes*as.vector(R1_b)
 			data[,colnames(genes)]=R1_b_genes
 
@@ -1389,6 +613,7 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 			}
 
 			data$G = genes%*%weights_genes
+
 			if(sqrt(sum((weights_genes_old-weights_genes)^2)) < eps) conv_G = TRUE
 			else conv_G = FALSE
 		}
@@ -1397,9 +622,9 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 		if (NCOL(env)>1){
 			# Reparametrizing variables for step c (estimating E)
 			data_expanded_withoutE = stats::model.matrix(formula_withoutE, data=data)
-			data$R0_c = data_expanded_withoutE%*%stats::coef(fit_a)[(index_without_GE | index_with_G)]
+			data$R0_c = data_expanded_withoutE%*%fit_a_coef[(index_without_GE | index_with_G)] + rand_effects
 			data_expanded_withE = stats::model.matrix(formula_withE, data=data)
-			R1_c = data_expanded_withE%*%stats::coef(fit_a)[(index_with_E | index_with_GE)]
+			R1_c = data_expanded_withE%*%fit_a_coef[(index_with_E | index_with_GE)]
 			R1_c_env = env*as.vector(R1_c)
 			data[,colnames(env)]=R1_c_env
 			if (!is.null(crossover) && crossover_fixed) data$R0_c = data$R0_c - crossover*R1_c
@@ -1414,6 +639,7 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 			else weights_env = weights_env_/sum(abs(weights_env_))
 			if (!is.null(crossover) && crossover_fixed) data$E = env%*%weights_env - crossover
 			else data$E = env%*%weights_env
+
 			if(sqrt(sum((weights_env_old-weights_env)^2)) < eps) conv_E = TRUE
 			else conv_E = FALSE
 		}
@@ -1429,13 +655,24 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 	if (print_steps) cat("\n")
 
 	# Rerunning last time and scaling to return as results
-	fit_a = stats::glm(formula, data=data, family=family, y=FALSE, model=FALSE)
+	if (lme4){
+		fit_a = stats::glm(formula, data=data, family=family, y=FALSE, model=FALSE)
+		if (family()$family=="gaussian") fit_a = lme4::lmer(formula, data=data)
+		else  fit_a = lme4::glmer(formula, data=data, family=family)
+		rand_effects = predict(fit_a, data, re.form = NULL) - predict(fit_a, data, re.form = NA) # We need to fix this part
+		fit_a_coef = lme4::fixef(fit_a)
+	}
+	else{ # fit main model
+		fit_a = stats::glm(formula, data=data, family=family, y=FALSE, model=FALSE) 
+		rand_effects = 0
+		fit_a_coef = stats::coef(fit_a)
+	}
 
 	# Reparametrizing variables for step b (estimating G)
 	data_expanded_withoutG = stats::model.matrix(formula_withoutG, data=data)
-	data$R0_b = data_expanded_withoutG%*%stats::coef(fit_a)[(index_without_GE | index_with_E)]
+	data$R0_b = data_expanded_withoutG%*%fit_a_coef[(index_without_GE | index_with_E)] + rand_effects
 	data_expanded_withG = stats::model.matrix(formula_withG, data=data)
-	R1_b = data_expanded_withG%*%stats::coef(fit_a)[(index_with_G | index_with_GE)]
+	R1_b = data_expanded_withG%*%fit_a_coef[(index_with_G | index_with_GE)]
 	R1_b_genes = genes*as.vector(R1_b)
 	data[,colnames(genes)]=R1_b_genes
 
@@ -1445,9 +682,9 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 
 	# Reparametrizing variables for step c (estimating E)
 	data_expanded_withoutE = stats::model.matrix(formula_withoutE, data=data)
-	data$R0_c = data_expanded_withoutE%*%stats::coef(fit_a)[(index_without_GE | index_with_G)]
+	data$R0_c = data_expanded_withoutE%*%fit_a_coef[(index_without_GE | index_with_G)] + rand_effects
 	data_expanded_withE = stats::model.matrix(formula_withE, data=data)
-	R1_c = data_expanded_withE%*%stats::coef(fit_a)[(index_with_E | index_with_GE)]
+	R1_c = data_expanded_withE%*%fit_a_coef[(index_with_E | index_with_GE)]
 	R1_c_env = env*as.vector(R1_c)
 	data[,colnames(env)]=R1_c_env
 	if (!is.null(crossover) && crossover_fixed) data$R0_c = data$R0_c - crossover*R1_c
@@ -1460,33 +697,67 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 	if (!is.null(crossover) && !crossover_fixed) crossover = as.numeric(coef(fit_c)[1])
 
 	# Make sure data make sense for user (and for plot function)
-	fit_a$data[,colnames(env)] = env
-	fit_a$data[,colnames(genes)] = genes
+	if (!lme4){ # cannot change a lme4 data sadly
+		fit_a$data[,colnames(env)] = env
+		fit_a$data[,colnames(genes)] = genes
+	}
 	fit_b$data[,colnames(genes)] = genes
+	fit_b$data = cbind(fit_b$data, data[,!(names(data) %in% names(fit_b$data))])
 	fit_c$data[,colnames(env)] = env
+	fit_c$data = cbind(fit_c$data, data[,!(names(data) %in% names(fit_c$data))])
 	weights_genes = stats::coef(fit_b)
-	fit_a$data$G = genes%*%weights_genes
+	if (!lme4) fit_a$data$G = genes%*%weights_genes # cannot change a lme4 data sadly
 	fit_b$data$G = genes%*%weights_genes
 	fit_c$data$G = genes%*%weights_genes
 	if (!is.null(crossover) && !crossover_fixed) weights_env = stats::coef(fit_c)[-1]
 	else weights_env = stats::coef(fit_c)
-	fit_a$data$E = env_%*%weights_env
-	fit_b$data$E = env_%*%weights_env
-	fit_c$data$E = env_%*%weights_env
+	if (is.null(crossover)) crossover_ = 0
+	else crossover_ = crossover
+	if (!lme4) fit_a$data$E = env_%*%weights_env - crossover_ # cannot change a lme4 data sadly
+	#fit_b$data$E = env_%*%weights_env - crossover_
+	#fit_c$data$E = env_%*%weights_env - crossover_
 
-	if (!(abs((fit_a$deviance-fit_b$deviance)/fit_a$deviance))<.01 && abs(((fit_a$deviance-fit_c$deviance)/fit_c$deviance))<.01) warning("Deviance differs by more than 1% between model parts. Make sure that everything was set up properly and try increasing the number of iterations (maxiter).")
+	if (!lme4){
+		if (!(abs((fit_a$deviance-fit_b$deviance)/fit_a$deviance))<.01 && abs(((fit_a$deviance-fit_c$deviance)/fit_c$deviance))<.01) warning("Deviance differs by more than 1% between model parts. Make sure that everything was set up properly and try increasing the number of iterations (maxiter).")
+	}
 
 	#Change some arguments so that we get the right AIC, BIC and dispersion for the model
-	true_rank = fit_a$rank + (fit_b$rank - 1) + (fit_c$rank - 1)
-	# true_rank might be different from df of logLik, this is because glm() assume that variance components should be counted
 	# I don't agree but we need to follow the same guideline to make sure it matches with glm()
 	logLik_df =  attr(logLik(fit_a), "df") + (fit_b$rank - 1) + (fit_c$rank - 1)
-	true_aic = 2*logLik_df - 2*logLik(fit_a)[1]
-	true_aicc = true_aic + ((2*logLik_df*(logLik_df+1))/(stats::nobs(fit_a)-logLik_df-1))
-	true_bic = log(stats::nobs(fit_a))*logLik_df - 2*logLik(fit_a)[1]
-	true_df.residual = stats::nobs(fit_a) - true_rank
-	true_null.deviance = fit_a$null.deviance
 
+	if (is.na(logLik(fit_a))){
+		# Quasi-GLM stuff 
+		get_dispersion <- function(object) {
+			with(object,sum((weights * residuals^2)[weights > 0])/df.residual)
+		}
+		get_loglik <- function(object) {
+			-object$deviance / 2
+		}
+		log_lik = get_loglik(fit_a)
+		c_hat = get_dispersion(fit_a)
+	}
+	else{
+		log_lik = logLik(fit_a)[1]
+		c_hat = 1
+	}
+	true_aic = 2*logLik_df - (2*log_lik/c_hat)
+	true_aicc = true_aic + ((2*logLik_df*(logLik_df+1))/(stats::nobs(fit_a)-logLik_df-1))
+	true_bic = log(stats::nobs(fit_a))*logLik_df - (2*log_lik/c_hat)
+
+	if (!lme4){
+		true_rank = fit_a$rank + (fit_b$rank - 1) + (fit_c$rank - 1)
+		# true_rank might be different from df of logLik, this is because glm() assume that variance components should be counted
+		true_df.residual = stats::nobs(fit_a) - true_rank
+		true_null.deviance = fit_a$null.deviance
+		lme4 = FALSE
+	}
+	else{
+		true_rank = length(lme4::fixef(fit_a)) + (fit_b$rank - 1) + (fit_c$rank - 1)
+		true_df.residual = stats::nobs(fit_a) - true_rank
+		fit_a_null = stats::glm(formula_norand, data=data, family=family, y=FALSE, model=FALSE)
+		true_null.deviance = fit_a_null$null.deviance
+		lme4 = TRUE
+	}
 	# print convergences stuff;
 	conv = (conv_G & conv_E)
 	if (conv_G & conv_E){
@@ -1497,12 +768,89 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 		if (!is.null(crossover) && !crossover_fixed) warning(paste0("The model is not garanteed to converge when a crossover point is estimated. Try different starting points for the crossover point."))
 	}
 	if (is.null(crossover)) crossover_fixed=NULL
-	result = list(fit_main = fit_a, fit_genes = fit_b, fit_env = fit_c, true_model_parameters=list(AIC = true_aic, AICc = true_aicc, BIC = true_bic, rank = true_rank, df.residual = true_df.residual, null.deviance=true_null.deviance), ylim=ylim, formula=formula, crossover=crossover, crossover_fixed=crossover_fixed, conv=conv)
+	result = list(fit_main = fit_a, fit_genes = fit_b, fit_env = fit_c, true_model_parameters=list(AIC = true_aic, AICc = true_aicc, BIC = true_bic, rank = true_rank, df.residual = true_df.residual, null.deviance=true_null.deviance, lme4=lme4), ylim=ylim, formula=formula, crossover=crossover, crossover_fixed=crossover_fixed, conv=conv)
 	class(result) <- "LEGIT"
 	return(result)
 }
 
-GxE_interaction_test = function(data, genes, env, formula_noGxE, crossover=c("min","max"), include_noGxE_models = TRUE, reverse_code=FALSE, rescale = FALSE, boot = NULL, criterion="BIC", start_genes=NULL, start_env=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, id=NULL, classification=FALSE, seed=NULL)
+#' @title Testing of the GxE interaction
+#' @description Testing of the GxE interaction using the competitive-confirmatory approach adapted from Belsky, Pluess et Widaman (2013). Reports the different hypotheses (diathesis-stress, vantage-sensitivity, or differential susceptibility), assuming or not assuming a main effect for \emph{E} (WEAK vs STRONG) using the LEGIT model.
+#' @param data data.frame of the dataset to be used. 
+#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
+#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
+#' @param formula_noGxE formula WITHOUT \emph{G} or \emph{E} (y ~ covariates). \emph{G} and \emph{E} will automatically be added properly based on the hypotheses tested.
+#' @param crossover A tuple containting the minimum and maximum of the environment used as crossover point of \emph{E} used in the vantage sensitivity and diathesis-stress models. Instead of providing two number, you can also write c("min","max") to automatically choose the expected minimum or maximum of the environmental score which is calculated based on the min/max of the environments and the current weights.
+#' @param include_noGxE_models If True, we test for models with only G, only E, both G and E, neither G and E (four models without a GxE). This is to verify for false positives, if one of those models has the best fit, then it is possible that there is no GxE, thus no type of GxE. With a single gene and environment, simply looking at the p-value of the GxE is good enough to get around 5-10 percent false positive rate, but with multiple genes and environments, we need to compare model fits to get a low false positive rate. Use your own judgment when using this because if you have multiple genes and environments and small/moderate N, a model without GxE could have a lower BIC but still not be the actual best model. However, if you see little difference in BIC between all 4 GxE models and the non-GxE models have much lower BIC, than it is likely that there is no GxE. Note that this is only implemented for AIC, AICc and BIC. (Default = True)
+#' @param reverse_code If TRUE, after fitting the model, the genes with negative weights are reverse coded (ex: \eqn{g_{rev}} = 1 - \eqn{g}). It assumes that the original coding is in [0,1]. The purpose of this option is to prevent genes with negative weights which cause interpretation problems (ex: depression normally decreases attention but with a negative genetic score, it increases attention). Warning, using this option with GxG interactions could cause nonsensical results since GxG could be inverted. Also note that this may fail with certain models (Default=FALSE).
+#' @param rescale If TRUE, the environmental variables are automatically rescaled to the range [-1,1]. This improves interpretability (Default=FALSE).
+#' @param boot Optional number of bootstrap samples. If not NULL, we use bootstrap to find the confidence interval of the crossover point. This provides more realistic confidence intervals. Make sure to use a bigger number (>= 1000) to get good precision; also note that a too small number could return an error ("estimated adjustment 'a' is NA").
+#' @param criterion Criterion used to assess which model is the best. It can be set to "AIC", "AICc", "BIC", "cv", "cv_AUC", "cv_Huber" (Default="BIC").
+#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
+#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param id Optional id of observations, can be a vector or data.frame (only used when returning list of possible outliers).
+#' @param classification Set to TRUE if you are doing classification (binary outcome).
+#' @param seed Seed for cross-validation folds.
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @param lme4 If TRUE, uses lme4::lmer or lme4::glmer; Note that is an experimental feature, bugs may arise and certain functions may fail. Currently only summary(), plot(), GxE_interaction_test(), LEGIT(), LEGIT_cv() work. Also note that the AIC and certain elements ignore the existence of the genes and environment variables, thus the AIC may not be used for variable selection of the genes and the environment. However, the AIC can still be used to compare models with the same genes and environments. (Default=FALSE).
+#' @return Returns a list containing 1) the six models ordered from best to worse (vantage sensitivity WEAK/STRONG, diathesis-stress WEAK/STRONG, differential susceptibility WEAK/STRONG) and 2) a data frame with the criterion, the crossover, 95\% coverage of the crossover, whether the crossover 95\% interval is within the observable range and the percentage of observations below the crossover point in order from best to worst based on the selected criterion. Models not within the observable range should be rejected even if the criterion is slightly better. An extremely low percentage of observations below the crossover point is also evidence toward diathesis-stress. Note that we assume that the environmental score is from bad to good but if this is not the case, then the models labelled as "diathesis-stress" could actually reflect vantage sensitivity and vice-versa. If outcome is Good-to-Bad: C=min(E) is diathesis-stress, C=max(E) is vantage sensitivity. If outcome is Bad-to-Good: C=max(E) is diathesis-stress, C=min(E) is vantage sensitivity.
+#' @examples
+#' \dontrun{
+#' ## Examples where x is in [0, 10]
+#' # Diathesis Stress WEAK
+#' ex_dia = example_with_crossover(250, c=10, coef_main = c(3,1,2), sigma=1)
+#' # Diathesis Stress STRONG
+#' ex_dia_s = example_with_crossover(250, c=10, coef_main = c(3,0,2), sigma=1)
+#' ## Assuming there is a crossover point at x=5
+#' # Differential Susceptibility WEAK
+#' ex_ds = example_with_crossover(250, c=5, coef_main = c(3+5,1,2), sigma=1)
+#' # Differential Susceptibility STRONG
+#' ex_ds_s = example_with_crossover(250, c=5, coef_main = c(3+5,0,2), sigma=1)
+#' 
+#' ## If true model is "Diathesis Stress WEAK"
+#' GxE_test_BIC = GxE_interaction_test(ex_dia$data, ex_dia$G, ex_dia$E, 
+#' formula_noGxE = y ~ 1, start_genes = ex_dia$coef_G, start_env = ex_dia$coef_E, 
+#' criterion="BIC")
+#' GxE_test_BIC$results
+#' 
+#' ## If true model is "Diathesis Stress STRONG"
+#' GxE_test_BIC = GxE_interaction_test(ex_dia_s$data, ex_dia_s$G, ex_dia_s$E, 
+#' formula_noGxE = y ~ 1, start_genes = ex_dia_s$coef_G, start_env = ex_dia_s$coef_E, 
+#' criterion="BIC")
+#' GxE_test_BIC$results
+#' 
+#' ## If true model is "Differential susceptibility WEAK"
+#' GxE_test_BIC = GxE_interaction_test(ex_ds$data, ex_ds$G, ex_ds$E, 
+#' formula_noGxE = y ~ 1, start_genes = ex_ds$coef_G, start_env = ex_ds$coef_E, 
+#' criterion="BIC")
+#' GxE_test_BIC$results
+#' 
+#' ## If true model is "Differential susceptibility STRONG"
+#' GxE_test_BIC = GxE_interaction_test(ex_ds_s$data, ex_ds_s$G, ex_ds_s$E, 
+#' formula_noGxE = y ~ 1, start_genes = ex_ds_s$coef_G, start_env = ex_ds_s$coef_E,
+#' criterion="BIC")
+#' GxE_test_BIC$results
+#' 
+#' # Example of plots
+#' plot(GxE_test_BIC$fits$diff_suscept_STRONG, xlim=c(0,10), ylim=c(3,13))
+#' plot(GxE_test_BIC$fits$diff_suscept_WEAK, xlim=c(0,10), ylim=c(3,13))
+#' plot(GxE_test_BIC$fits$diathesis_stress_STRONG, xlim=c(0,10), ylim=c(3,13))
+#' plot(GxE_test_BIC$fits$diathesis_stress_WEAK, xlim=c(0,10), ylim=c(3,13))
+#' }
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). psyarxiv.com/27uw8. 10.17605/OSF.IO/27UW8.
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @references Jay Belsky, Michael Pluess and Keith F. Widaman. \emph{Confirmatory and competitive evaluation of alternative gene-environment interaction hypotheses} (2013). Journal of Child Psychology and Psychiatry, 54(10), 1135-1143.
+#' @export
+
+GxE_interaction_test = function(data, genes, env, formula_noGxE, crossover=c("min","max"), include_noGxE_models = TRUE, reverse_code=FALSE, rescale = FALSE, boot = NULL, criterion="BIC", start_genes=NULL, start_env=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, id=NULL, classification=FALSE, seed=NULL, test_only=FALSE, lme4=FALSE)
 {
 	formula = stats::as.formula(formula_noGxE)
 	formula_WEAK = paste0(formula, " + G*E - G")
@@ -1542,12 +890,12 @@ GxE_interaction_test = function(data, genes, env, formula_noGxE, crossover=c("mi
 		env_upper_bound = rep(0, NCOL(env))
 		for (i in 1:NCOL(env)){
 			if (coef_env[i] >= 0){
-				env_lower_bound[i] = min(fit$fit_main$data[,names(env)[i]])
-				env_upper_bound[i] = max(fit$fit_main$data[,names(env)[i]])
+				env_lower_bound[i] = min(fit$fit_env$data[,names(env)[i]])
+				env_upper_bound[i] = max(fit$fit_env$data[,names(env)[i]])
 			}
 			else{
-				env_lower_bound[i] = max(fit$fit_main$data[,names(env)[i]])
-				env_upper_bound[i] = min(fit$fit_main$data[,names(env)[i]])
+				env_lower_bound[i] = max(fit$fit_env$data[,names(env)[i]])
+				env_upper_bound[i] = min(fit$fit_env$data[,names(env)[i]])
 
 			}
 		}
@@ -1556,63 +904,65 @@ GxE_interaction_test = function(data, genes, env, formula_noGxE, crossover=c("mi
 
 	# Vantage sensitivity c = min
 	if (crossover[1] == "min"){
-		vantage_sensitivity_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale)
+		vantage_sensitivity_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 		if (crossover[1] == "min") crossover_vantage_sensitivity_WEAK = as.numeric(get_LU(vantage_sensitivity_WEAK)$L %*% coef(vantage_sensitivity_WEAK$fit_env))
-		vantage_sensitivity_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=coef(vantage_sensitivity_WEAK$fit_genes), start_env=coef(vantage_sensitivity_WEAK$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_vantage_sensitivity_WEAK, crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale)
+		vantage_sensitivity_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=coef(vantage_sensitivity_WEAK$fit_genes), start_env=coef(vantage_sensitivity_WEAK$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_vantage_sensitivity_WEAK, crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 
-		vantage_sensitivity_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale)
+		vantage_sensitivity_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 		if (crossover[1] == "min") crossover_vantage_sensitivity_STRONG = as.numeric(get_LU(vantage_sensitivity_STRONG)$L %*% coef(vantage_sensitivity_STRONG$fit_env))
-		vantage_sensitivity_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=coef(vantage_sensitivity_STRONG$fit_genes), start_env=coef(vantage_sensitivity_STRONG$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_vantage_sensitivity_STRONG, crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale)
+		vantage_sensitivity_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=coef(vantage_sensitivity_STRONG$fit_genes), start_env=coef(vantage_sensitivity_STRONG$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_vantage_sensitivity_STRONG, crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 	}
 	else{
-		vantage_sensitivity_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover[1], crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale)
-		vantage_sensitivity_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover[1], crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale)
+		vantage_sensitivity_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover[1], crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
+		vantage_sensitivity_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover[1], crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 	}
 	# Diathesis-Stress c = max
 	if (crossover[2] == "max"){
-		diathesis_stress_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale)
+		diathesis_stress_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 		if (crossover[2] == "max") crossover_diathesis_stress_WEAK = as.numeric(get_LU(diathesis_stress_WEAK)$U %*% coef(diathesis_stress_WEAK$fit_env))
-		diathesis_stress_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=coef(diathesis_stress_WEAK$fit_genes), start_env=coef(diathesis_stress_WEAK$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_diathesis_stress_WEAK, crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale)
+		diathesis_stress_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=coef(diathesis_stress_WEAK$fit_genes), start_env=coef(diathesis_stress_WEAK$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_diathesis_stress_WEAK, crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 
-		diathesis_stress_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale)
+		diathesis_stress_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 		if (crossover[2] == "max") crossover_diathesis_stress_STRONG = as.numeric(get_LU(diathesis_stress_STRONG)$U %*% coef(diathesis_stress_STRONG$fit_env))
-		diathesis_stress_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=coef(diathesis_stress_STRONG$fit_genes), start_env=coef(diathesis_stress_STRONG$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_diathesis_stress_STRONG, crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale)
+		diathesis_stress_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=coef(diathesis_stress_STRONG$fit_genes), start_env=coef(diathesis_stress_STRONG$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_diathesis_stress_STRONG, crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 	}
 	else{
-		diathesis_stress_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover[2], crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale)
-		diathesis_stress_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover[2], crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale)
+		diathesis_stress_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover[2], crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
+		diathesis_stress_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover[2], crossover_fixed = TRUE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 	}
 
 	# We first run the models as normal LEGIT models without crossover, then we use C=-beta_G/beta_GxE as the crossover starting point. 
 	# We also use the G and E weights too as starting point for even more stability.
-	diff_suscept_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK_nocrossover, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale)
-	crossover_diff_suscept_WEAK = -coef(diff_suscept_WEAK$fit_main)[2]/coef(diff_suscept_WEAK$fit_main)[4]
-	diff_suscept_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=coef(diff_suscept_WEAK$fit_genes), start_env=coef(diff_suscept_WEAK$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_diff_suscept_WEAK, crossover_fixed = FALSE, reverse_code=reverse_code, rescale=rescale)
-	diff_suscept_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG_nocrossover, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale)
-	crossover_diff_suscept_STRONG = -coef(diff_suscept_STRONG$fit_main)[2]/coef(diff_suscept_STRONG$fit_main)[3]
-	diff_suscept_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=coef(diff_suscept_STRONG$fit_genes), start_env=coef(diff_suscept_STRONG$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_diff_suscept_STRONG, crossover_fixed = FALSE, reverse_code=reverse_code, rescale=rescale)
+	diff_suscept_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK_nocrossover, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
+	if (lme4) crossover_diff_suscept_WEAK = -lme4::fixef(diff_suscept_WEAK$fit_main)[2]/lme4::fixef(diff_suscept_WEAK$fit_main)[4]
+	else crossover_diff_suscept_WEAK = -coef(diff_suscept_WEAK$fit_main)[2]/coef(diff_suscept_WEAK$fit_main)[4]
+	diff_suscept_WEAK = LEGIT(data=data, genes=genes, env=env, formula=formula_WEAK, start_genes=coef(diff_suscept_WEAK$fit_genes), start_env=coef(diff_suscept_WEAK$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_diff_suscept_WEAK, crossover_fixed = FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
+	diff_suscept_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG_nocrossover, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
+	if (lme4) crossover_diff_suscept_STRONG = -lme4::fixef(diff_suscept_STRONG$fit_main)[2]/lme4::fixef(diff_suscept_STRONG$fit_main)[3]
+	else crossover_diff_suscept_STRONG = -coef(diff_suscept_STRONG$fit_main)[2]/coef(diff_suscept_STRONG$fit_main)[3]
+	diff_suscept_STRONG = LEGIT(data=data, genes=genes, env=env, formula=formula_STRONG, start_genes=coef(diff_suscept_STRONG$fit_genes), start_env=coef(diff_suscept_STRONG$fit_env), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover_diff_suscept_STRONG, crossover_fixed = FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
 
 	# Criterions
 	if (criterion == "cv" || criterion == "cv_AUC" || criterion=="cv_Huber" || criterion=="cv_L1"){
 
 		if (crossover[1] == "min"){
-			vantage_sensitivity_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_vantage_sensitivity_WEAK, crossover_fixed = TRUE)
-			vantage_sensitivity_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_vantage_sensitivity_STRONG, crossover_fixed = TRUE)
+			vantage_sensitivity_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_vantage_sensitivity_WEAK, crossover_fixed = TRUE, test_only = test_only, lme4=lme4)
+			vantage_sensitivity_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_vantage_sensitivity_STRONG, crossover_fixed = TRUE, test_only = test_only, lme4=lme4)
 		}
 		else{
-			vantage_sensitivity_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover[1], crossover_fixed = TRUE)
-			vantage_sensitivity_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover[1], crossover_fixed = TRUE)
+			vantage_sensitivity_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover[1], crossover_fixed = TRUE, test_only = test_only, lme4=lme4)
+			vantage_sensitivity_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover[1], crossover_fixed = TRUE, test_only = test_only, lme4=lme4)
 		}
 		if (crossover[2] == "max"){
-			diathesis_stress_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_diathesis_stress_WEAK, crossover_fixed = TRUE)
-			diathesis_stress_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_diathesis_stress_STRONG, crossover_fixed = TRUE)
+			diathesis_stress_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_diathesis_stress_WEAK, crossover_fixed = TRUE, test_only = test_only, lme4=lme4)
+			diathesis_stress_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_diathesis_stress_STRONG, crossover_fixed = TRUE, test_only = test_only, lme4=lme4)
 		}
 		else{
-			diathesis_stress_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover[2], crossover_fixed = TRUE)
-			diathesis_stress_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover[2], crossover_fixed = TRUE)
+			diathesis_stress_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover[2], crossover_fixed = TRUE, test_only = test_only, lme4=lme4)
+			diathesis_stress_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover[2], crossover_fixed = TRUE, test_only = test_only, lme4=lme4)
 		}
-		diff_suscept_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_diff_suscept_WEAK, crossover_fixed = FALSE)
-		diff_suscept_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_diff_suscept_STRONG, crossover_fixed = FALSE)
+		diff_suscept_WEAK_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_WEAK, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_diff_suscept_WEAK, crossover_fixed = FALSE, test_only = test_only, lme4=lme4)
+		diff_suscept_STRONG_cv = LEGIT_cv(data=data, genes=genes, env=env, formula=formula_STRONG, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, seed=seed, id=id, crossover = crossover_diff_suscept_STRONG, crossover_fixed = FALSE, test_only = test_only, lme4=lme4)
 
 		if (criterion == "cv") model_criterion = c(mean(vantage_sensitivity_WEAK_cv$R2_cv), mean(vantage_sensitivity_STRONG_cv$R2_cv),mean(diathesis_stress_WEAK_cv$R2_cv), mean(diathesis_stress_STRONG_cv$R2_cv), mean(diff_suscept_WEAK_cv$R2_cv), mean(diff_suscept_STRONG_cv$R2_cv))
 		else if (criterion == "cv_Huber") model_criterion = c(mean(vantage_sensitivity_WEAK_cv$Huber_cv), mean(vantage_sensitivity_STRONG_cv$Huber_cv),mean(diathesis_stress_WEAK_cv$Huber_cv), mean(diathesis_stress_STRONG_cv$Huber_cv), mean(diff_suscept_WEAK_cv$Huber_cv), mean(diff_suscept_STRONG_cv$Huber_cv))
@@ -1647,9 +997,11 @@ GxE_interaction_test = function(data, genes, env, formula_noGxE, crossover=c("mi
 			data_ = d[i,,drop=FALSE]
 			genes_ = genes[i,,drop=FALSE]
 			env_ = env[i,,drop=FALSE]
-			diff_suscept_WEAK = LEGIT(data=data_, genes=genes_, env=env_, formula=formula_WEAK_nocrossover, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale)
-			diff_suscept_STRONG = LEGIT(data=data_, genes=genes_, env=env_, formula=formula_STRONG_nocrossover, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale)
-			return (c(-coef(diff_suscept_WEAK$fit_main)[2]/coef(diff_suscept_WEAK$fit_main)[4],-coef(diff_suscept_STRONG$fit_main)[2]/coef(diff_suscept_STRONG$fit_main)[3]))
+			diff_suscept_WEAK = LEGIT(data=data_, genes=genes_, env=env_, formula=formula_WEAK_nocrossover, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
+			diff_suscept_STRONG = LEGIT(data=data_, genes=genes_, env=env_, formula=formula_STRONG_nocrossover, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, reverse_code=reverse_code, rescale=rescale, lme4=lme4)
+			if (lme4) out = (c(-lme4::fixef(diff_suscept_WEAK$fit_main)[2]/lme4::fixef(diff_suscept_WEAK$fit_main)[4],-lme4::fixef(diff_suscept_STRONG$fit_main)[2]/lme4::fixef(diff_suscept_STRONG$fit_main)[3]))
+			else out = (c(-coef(diff_suscept_WEAK$fit_main)[2]/coef(diff_suscept_WEAK$fit_main)[4],-coef(diff_suscept_STRONG$fit_main)[2]/coef(diff_suscept_STRONG$fit_main)[3]))
+			return(out)
 		}
 		boot_results = boot::boot(data, LEGIT_boot, boot)
 		crossover_interval_WEAK = round(boot::boot.ci(boot_results, index=1, type="bca")$bca[4:5],2)
@@ -1660,15 +1012,23 @@ GxE_interaction_test = function(data, genes, env, formula_noGxE, crossover=c("mi
 		crossover_interval_WEAK = round(suppressMessages(stats::confint(diff_suscept_WEAK$fit_env,"crossover")),2)
 		crossover_interval_STRONG = round(suppressMessages(stats::confint(diff_suscept_STRONG$fit_env,"crossover")),2)
 	}
-	data = diff_suscept_WEAK$fit_main$data
-	inside_WEAK = (crossover_interval_WEAK[1] > min(data$E) && crossover_interval_WEAK[2] < max(data$E))
-	inside_STRONG = (crossover_interval_STRONG[1] > min(data$E) && crossover_interval_STRONG[2] < max(data$E))
+	data_dw = diathesis_stress_WEAK$fit_env$data$E
+	data_ds = diathesis_stress_STRONG$fit_env$data$E
+	data_vw = vantage_sensitivity_WEAK$fit_env$data$E
+	data_vs = vantage_sensitivity_STRONG$fit_env$data$E
+	data_dfw = diff_suscept_WEAK$fit_env$data$E
+	data_dfs = diff_suscept_STRONG$fit_env$data$E
+
+	data_E = diff_suscept_WEAK$fit_env$data$E
+
+	inside_WEAK = (crossover_interval_WEAK[1] > min(data_E) && crossover_interval_WEAK[2] < max(data_E))
+	inside_STRONG = (crossover_interval_STRONG[1] > min(data_E) && crossover_interval_STRONG[2] < max(data_E))
 	crossover_interval_WEAK = paste0("( ",crossover_interval_WEAK[1]," / ",crossover_interval_WEAK[2]," )")
 	crossover_interval_STRONG = paste0("( ",crossover_interval_STRONG[1]," / ",crossover_interval_STRONG[2]," )")
 
 	# Proportion of observations below crossover point
-	if (include_noGxE_models) prop_below = c(sum(vantage_sensitivity_WEAK$fit_main$data$E <= crossover_vantage_sensitivity_WEAK)/NROW(vantage_sensitivity_WEAK$fit_main$data), sum(vantage_sensitivity_STRONG$fit_main$data$E <= crossover_vantage_sensitivity_STRONG)/NROW(vantage_sensitivity_STRONG$fit_main$data), sum(diathesis_stress_WEAK$fit_main$data$E <= crossover_diathesis_stress_WEAK)/NROW(diathesis_stress_WEAK$fit_main$data), sum(diathesis_stress_STRONG$fit_main$data$E <= crossover_diathesis_stress_STRONG)/NROW(diathesis_stress_STRONG$fit_main$data), sum(diff_suscept_WEAK$fit_main$data$E <= crossover_diff_suscept_WEAK)/NROW(diff_suscept_WEAK$fit_main$data), sum(diff_suscept_STRONG$fit_main$data$E <= crossover_diff_suscept_STRONG)/NROW(diff_suscept_STRONG$fit_main$data), NA, NA, NA, NA)
-	else prop_below = c(sum(vantage_sensitivity_WEAK$fit_main$data$E <= crossover_vantage_sensitivity_WEAK)/NROW(vantage_sensitivity_WEAK$fit_main$data), sum(vantage_sensitivity_STRONG$fit_main$data$E <= crossover_vantage_sensitivity_STRONG)/NROW(vantage_sensitivity_STRONG$fit_main$data), sum(diathesis_stress_WEAK$fit_main$data$E <= crossover_diathesis_stress_WEAK)/NROW(diathesis_stress_WEAK$fit_main$data), sum(diathesis_stress_STRONG$fit_main$data$E <= crossover_diathesis_stress_STRONG)/NROW(diathesis_stress_STRONG$fit_main$data), sum(diff_suscept_WEAK$fit_main$data$E <= crossover_diff_suscept_WEAK)/NROW(diff_suscept_WEAK$fit_main$data), sum(diff_suscept_STRONG$fit_main$data$E <= crossover_diff_suscept_STRONG)/NROW(diff_suscept_STRONG$fit_main$data))
+	if (include_noGxE_models) prop_below = c(sum(data_vw <= crossover_vantage_sensitivity_WEAK)/NROW(data_vw), sum(data_vs <= crossover_vantage_sensitivity_STRONG)/NROW(data_vs), sum(data_dw <= crossover_diathesis_stress_WEAK)/NROW(data_dw), sum(data_ds <= crossover_diathesis_stress_STRONG)/NROW(data_ds), sum(data_dfw <= crossover_diff_suscept_WEAK)/NROW(data_dfw), sum(data_dfs <= crossover_diff_suscept_STRONG)/NROW(data_dfs), NA, NA, NA, NA)
+	else prop_below = c(sum(data_vw <= crossover_vantage_sensitivity_WEAK)/NROW(data_vw), sum(data_vs <= crossover_vantage_sensitivity_STRONG)/NROW(data_vs), sum(data_dw <= crossover_diathesis_stress_WEAK)/NROW(data_dw), sum(data_ds <= crossover_diathesis_stress_STRONG)/NROW(data_ds), sum(data_dfw <= crossover_diff_suscept_WEAK)/NROW(data_dfw), sum(data_dfs <= crossover_diff_suscept_STRONG)/NROW(data_dfs))
 
 	# Aggregating results
 	if (include_noGxE_models){
@@ -1686,8 +1046,32 @@ GxE_interaction_test = function(data, genes, env, formula_noGxE, crossover=c("mi
 	colnames(results)[3] = "crossover 95%"
 	colnames(results)[4] = "Within observable range?"
 	colnames(results)[5] = "% of observations below crossover"
-	return(list(fits = fits, results = results, E_range=c(min(data$E),max(data$E))))
+	return(list(fits = fits, results = results, E_range=c(min(data_E),max(data_E))))
 }
+
+#' @title Regions of significance using Johnson-Neyman technique
+#' @description Constructs a LEGIT model and returns the regions of significance (RoS) with the predicted type of interaction (diathesis-stress, vantage-sensitivity, or differential susceptibility). RoS is not recommended due to poor accuracy with small samples and small effect sizes, GxE_interaction_test has much better accuracy overall. Only implemented for family=gaussian.
+#' @param data data.frame of the dataset to be used. 
+#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
+#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
+#' @param formula_noGxE formula WITHOUT \emph{G} or \emph{E} (y ~ covariates). \emph{G} and \emph{E} will automatically be added.
+#' @param t_alpha Alpha level of the student-t distribution for the regions of significance (Default = .05)
+#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
+#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param reverse_code If TRUE, after fitting the model, the genes with negative weights are reverse coded (ex: \eqn{g_rev} = 1 - \eqn{g}). It assumes that the original coding is in [0,1]. The purpose of this option is to prevent genes with negative weights which cause interpretation problems (ex: depression normally decreases attention but with a negative genetic score, it increases attention). Warning, using this option with GxG interactions could cause nonsensical results since GxG could be inverted. Also note that this may fail with certain models (Default=FALSE).
+#' @param rescale If TRUE, the environmental variables are automatically rescaled to the range [-1,1]. This improves interpretability (Default=FALSE).
+#' @return Returns a list containing the RoS and the predicted type of interaction.
+#' @examples
+#'	train = example_2way(500, 1, seed=777)
+#'	ros = GxE_interaction_RoS(train$data, train$G, train$E, y ~ 1)
+#'	ros
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). psyarxiv.com/27uw8. 10.17605/OSF.IO/27UW8.
+#' @references  Daniel J. Bauer & Patrick J. Curran. \emph{Probing Interactions in Fixed and Multilevel Regression: Inferential and Graphical Techniques} (2005). Multivariate Behavioral Research, 40:3, 373-400, DOI: 10.1207/s15327906mbr4003_5.
+#' @export
 
 GxE_interaction_RoS = function(data, genes, env, formula_noGxE, t_alpha = .05, start_genes=NULL, start_env=NULL, eps=.001, maxiter=100, ylim=NULL, reverse_code=FALSE, rescale=FALSE){
 	formula = stats::as.formula(formula_noGxE)
@@ -1721,21 +1105,65 @@ GxE_interaction_RoS = function(data, genes, env, formula_noGxE, t_alpha = .05, s
 	return(list(RoS=RoS_results, int_type=int_type))
 }
 
+#' @title Plot
+#' @description Plot of LEGIT models. By default, variables that are not in \emph{G} or \emph{E} are fixed to the mean.
+#' @param x An object of class "LEGIT", usually, a result of a call to LEGIT.
+#' @param cov_values Vector of the values, for each covariate, that will be used in the plotting, if there are any covariates. It must contain the names of the variables. Covariates are the variables that are not \emph{G} nor \emph{E} but still are adjusted for in the model. By default, covariates are fixed to the mean.
+#' @param gene_quant Vector of the genes quantiles used to make the plot. We use quantiles instead of fixed values because genetic scores can vary widely depending on the weights, thus looking at quantiles make this simpler. (Default = c(.025,.50,.975))
+#' @param env_quant Vector of the environments quantiles used to make the plot. We use quantiles instead of fixed values because environmental scores can vary widely depending on the weights, thus looking at quantiles make this simpler. (Default = c(.025,.50,.975))
+#' @param outcome_quant Vector of the outcome quantiles used to make the plot. We use quantiles instead of fixed values because environmental scores can vary widely depending on the weights, thus looking at quantiles make this simpler. (Default = c(.025,.50,.975))
+#' @param cols Colors for the slopes with different genetic score. Must be a vector same length as "gene_range". (Default = c("#3288BD", "#CAB176", #D53E4F"))
+#' @param ylab Y-axis label (Default = "Outcome")
+#' @param xlab X-axis label (Default = "Environment")
+#' @param legtitle Title of the Legend for the genes slopes label (Default = "Genetic score")
+#' @param leglab Optional vector of labels of the Legend for the genes slopes label
+#' @param cex.axis relative scale of axis (Default = 1.9)
+#' @param cex.lab relative scale of labels (Default = 2)
+#' @param cex.main relative scale overall (Default = 2.2)
+#' @param cex.leg relative scale of legend (Default = 2.2)
+#' @param xlim X-axis vector of size two with min and max (Default = NULL which leads to min="2.5 percentile" and max="97.5 percentile").
+#' @param ylim Y-axis vector of size two with min and max (Default = NULL which leads to min="2.5 percentile" and max="97.5 percentile").
+#' @param x_at specific ticks for the X-axis, first and last will be min and max respectively (Default = NULL which leads to 2.5, 50 and 97.5 percentiles).
+#' @param y_at specific ticks for the Y-axis, first and last will be min and max respectively (Default = NULL which leads to 2.5, 50 and 97.5 percentiles).
+#' @param legend The location may of the legend be specified by setting legend to a single keyword from the list "bottomright", "bottom", "bottomleft", "left", "topleft", "top", "topright", "right" and "center" (Default = "topleft").
+#' @return Returns a list containing the different models (diathesis-stress, differential susceptibility and vantage sensitivity WEAK or STRONG) in order from best to worst for each selected criterion.
+#' @param ... Further arguments passed to or from other methods.
+#' @examples
+#'	train = example_2way(500, 1, seed=777)
+#'	fit = LEGIT(train$data, train$G, train$E, y ~ G*E, train$coef_G, train$coef_E)
+#'	plot(fit)
+#' @import formula.tools graphics
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @exportS3Method plot LEGIT
+
 plot.LEGIT = function(x, cov_values = NULL, gene_quant = c(.025,.50,.975), env_quant = c(.025,.50,.975), outcome_quant = c(.025,.50,.975), cols = c("#3288BD", "#CAB176", "#D53E4F"), ylab="Outcome", xlab="Environment", legtitle="Genetic score", leglab=NULL, xlim= NULL, ylim= NULL, x_at = NULL, y_at = NULL, cex.axis = 1.9, cex.lab=2, cex.main=2.2, cex.leg=2.2, legend="topleft", ...){
 	
 	# Better names (need to use x for S3 class consistency)
 	object = x
 	formula = object$formula
+	lme4 = object$true_model_parameters$lme4
 
-	# Checks
+	# formula stuff
+	formula = stats::as.formula(formula)
+	# Formula with no random effects
+	formula_norand = gsub("\\s", "", deparse(formula))
+	formula_norand = gsub("\\+\\(.*)","",formula_norand)
+	formula_norand = gsub("\\(.*)","",formula_norand)
+	formula_norand = as.formula(formula_norand)
+	# Formula with rand effect put as fixed effects, so model.frame works
+	formula_wrand = gsub("(","",formula, fixed=TRUE)
+	formula_wrand = gsub(")","",formula_wrand, fixed=TRUE)
+	formula_wrand = gsub("||","+",formula_wrand, fixed=TRUE)
+	formula_wrand = gsub("|","+",formula_wrand, fixed=TRUE)
+	formula_wrand = as.formula(formula_wrand)
 
 	# Quantile range
-	gene_range = as.numeric(quantile(object$fit_main$data$G, gene_quant))
-	env_range = as.numeric(quantile(object$fit_main$data$E, env_quant))
+	gene_range = as.numeric(quantile(object$fit_genes$data$G, gene_quant))
+	env_range = as.numeric(quantile(object$fit_env$data$E, env_quant))
 	formula_outcome = get.vars(formula)[1]
-	outcome_range = as.numeric(quantile(object$fit_main$data[formula_outcome][,], outcome_quant))
+	outcome_range = as.numeric(quantile(object$fit_env$data[formula_outcome][,], outcome_quant))
 	# Fix this attribute to prevent problems if trying to predict fit_main directly later on
-	attr(object$fit_main$terms,"dataClasses")[attr(object$fit_main$terms,"dataClasses")=="nmatrix.1"] = "numeric"
+	if (!lme4) attr(object$fit_main$terms,"dataClasses")[attr(object$fit_main$terms,"dataClasses")=="nmatrix.1"] = "numeric"
 
 	# Defaults
 	if (is.null(ylim)){
@@ -1761,7 +1189,7 @@ plot.LEGIT = function(x, cov_values = NULL, gene_quant = c(.025,.50,.975), env_q
 	else E_ = E
 
 	# covariates
-	covariates = get.vars(formula)[-1]
+	covariates = get.vars(formula_wrand)[-1]
 	covariates = covariates[covariates != "G" & covariates != "E"]
 	if (!is.null(cov_values) && length(cov_values)!=length(covariates)) stop("cov_values doesn't have the correct number of covariates")
 
@@ -1774,7 +1202,8 @@ plot.LEGIT = function(x, cov_values = NULL, gene_quant = c(.025,.50,.975), env_q
 		for (i in 1:length(covariates)){
 			if (identical(covariates, character(0))) newdata = newdata
 			else if (is.null(cov_values)){
-				newdata = cbind(newdata, rep(apply(object$fit_main$data[covariates[i]], 2, mean),101))
+				if (is.factor(object$fit_genes$data[covariates[i]])) newdata = cbind(newdata, rep(levels(object$fit_genes$data[covariates[i]])[1],101))
+				else newdata = cbind(newdata, rep(apply(object$fit_genes$data[covariates[i]], 2, mean),101))
 				colnames(newdata)[NCOL(newdata)] = covariates[i]
 			}
 			else{
@@ -1783,24 +1212,49 @@ plot.LEGIT = function(x, cov_values = NULL, gene_quant = c(.025,.50,.975), env_q
 			}
 		}
 		# Prediction lines
-		preds <- predict(object$fit_main, newdata = newdata, se.fit = TRUE, type = "link")
 		ilink <- family(object$fit_main)$linkinv
-		graphics::polygon(c(E,rev(E)),c(ilink(preds$fit-2*preds$se.fit),rev(ilink(preds$fit+2*preds$se.fit))),col=grDevices::adjustcolor(cols[j], alpha.f = 0.2),border = NA)
-		graphics::lines(E,ilink(preds$fit), col=cols[j], lwd=2)
+		if (lme4){ 
+			preds <- predict(object$fit_main, newdata = newdata, type = "link", re.form=NA)
+			graphics::lines(E,ilink(preds), col=cols[j], lwd=2)
+		}
+		else{
+			preds <- predict(object$fit_main, newdata = newdata, se.fit = TRUE, type = "link")
+			graphics::polygon(c(E,rev(E)),c(ilink(preds$fit-2*preds$se.fit),rev(ilink(preds$fit+2*preds$se.fit))),col=grDevices::adjustcolor(cols[j], alpha.f = 0.2),border = NA)
+			graphics::lines(E,ilink(preds$fit), col=cols[j], lwd=2)
+		}
 	}
 	if (is.null(leglab)) leglab = paste0(gene_quant*100,"%")
 	legend(legend, legend=leglab,col = cols, lty=1, lwd=3, xpd = TRUE, cex = cex.leg, title=legtitle)
 }
 
-IMLEGIT_to_LEGIT = function(fit, data, genes, env, formula, eps=.001, maxiter=100, family=gaussian, ylim=NULL, print=TRUE){
-	fit = LEGIT(data = data, formula = formula, genes = genes[,names(coef(fit$fit_latent_var$G)),drop=FALSE], env = env[,names(coef(fit$fit_latent_var$E)),drop=FALSE], start_genes = coef(fit$fit_latent_var$G), start_env = coef(fit$fit_latent_var$E), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=print)
-	return(fit)
-}
-
-LEGIT_to_IMLEGIT = function(fit, data, genes, env, formula, eps=.001, maxiter=100, family=gaussian, ylim=NULL, print=TRUE){
-	fit = IMLEGIT(data = data, formula = formula, latent_var = list(G = genes[,names(coef(fit$fit_genes)),drop=FALSE], E = env[,names(coef(fit$fit_env)),drop=FALSE]), start_latent_var = list(coef(fit$fit_genes),coef(fit$fit_env)), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=print)
-	return(fit)
-}
+#' @title Independent Multiple Latent Environmental & Genetic InTeraction (IMLEGIT) model
+#' @description Constructs a generalized linear model (glm) with latent variables using alternating optimization. This is an extension of the LEGIT model to accommodate more than 2 latent variables.
+#' @param data data.frame of the dataset to be used. 
+#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ... (See examples below for more details)
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param print If FALSE, nothing except warnings will be printed. (Default = TRUE).
+#' @return Returns an object of the class "IMLEGIT" which is list containing, in the following order: a glm fit of the main model, a list of the glm fits of the latent variables and a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
+#' @examples
+#'	train = example_2way(500, 1, seed=777)
+#'	fit_best = IMLEGIT(train$data, list(G=train$G, E=train$E), y ~ G*E, 
+#'	list(train$coef_G, train$coef_E))
+#'	fit_default = IMLEGIT(train$data, list(G=train$G, E=train$E), y ~ G*E)
+#'	summary(fit_default)
+#'	summary(fit_best)
+#'	train = example_3way_3latent(500, 1, seed=777)
+#'	fit_best = IMLEGIT(train$data, train$latent_var, y ~ G*E*Z, 
+#'	list(train$coef_G, train$coef_E, train$coef_Z))
+#'	fit_default = IMLEGIT(train$data, train$latent_var, y ~ G*E*Z)
+#'	summary(fit_default)
+#'	summary(fit_best)
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @export
 
 IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, print=TRUE)
 {
@@ -1993,9 +1447,26 @@ IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, m
 	# true_rank might be different from df of logLik, this is because glm() assume that variance components should be counted
 	# I don't agree but we need to follow the same guideline to make sure it matches with glm()
 	logLik_df =  attr(logLik(fit_a), "df") + total_rank
-	true_aic = 2*logLik_df - 2*logLik(fit_a)[1]
+
+	if (is.na(logLik(fit_a))){
+		# Quasi-GLM stuff 
+		get_dispersion <- function(object) {
+			with(object,sum((weights * residuals^2)[weights > 0])/df.residual)
+		}
+		get_loglik <- function(object) {
+			-object$deviance / 2
+		}
+		log_lik = get_loglik(fit_a)
+		c_hat = get_dispersion(fit_a)
+	}
+	else{
+		log_lik = logLik(fit_a)[1]
+		c_hat = 1
+	}
+	true_aic = 2*logLik_df - (2*log_lik/c_hat)
 	true_aicc = true_aic + ((2*logLik_df*(logLik_df+1))/(stats::nobs(fit_a)-logLik_df-1))
-	true_bic = log(stats::nobs(fit_a))*logLik_df - 2*logLik(fit_a)[1]
+	true_bic = log(stats::nobs(fit_a))*logLik_df - (2*log_lik/c_hat)
+
 	true_df.residual = stats::nobs(fit_a) - true_rank
 	true_null.deviance = fit_a$null.deviance
 
@@ -2012,7 +1483,122 @@ IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, m
 	return(result)
 }
 
-elastic_net_var_select = function(data, latent_var, formula, latent_var_searched=NULL, cross_validation=FALSE, alpha=.75, standardize=TRUE, lambda_path=NULL, lambda_mult=1, lambda_min = .0001, n_lambda = 100, start_latent_var=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, print=TRUE)
+#' @title LEGIT to IMLEGIT
+#' @description Transforms a LEGIT model into a IMLEGIT model (Useful if you want to do plot() or GxE_interaction_test() with a model resulting from a variable selection method which gave a IMLEGIT model)
+#' @param fit LEGIT model
+#' @param data data.frame of the dataset to be used. 
+#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
+#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
+#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param print If FALSE, nothing except warnings will be printed (Default = TRUE).
+#' @return Returns an object of the class "IMLEGIT" which is list containing, in the following order: a glm fit of the main model, a list of the glm fits of the latent variables and a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
+#' @examples
+#'	train = example_2way(500, 1, seed=777)
+#'	fit = LEGIT(train$data, train$G, train$E, y ~ G*E, train$coef_G, train$coef_E)
+#'	fit_IMLEGIT = LEGIT_to_IMLEGIT(fit,train$data, train$G, train$E, y ~ G*E)
+#'	fit_LEGIT = IMLEGIT_to_LEGIT(fit_IMLEGIT,train$data, train$G, train$E, y ~ G*E)
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @export
+
+LEGIT_to_IMLEGIT = function(fit, data, genes, env, formula, eps=.001, maxiter=100, family=gaussian, ylim=NULL, print=TRUE){
+	fit = IMLEGIT(data = data, formula = formula, latent_var = list(G = genes[,names(coef(fit$fit_genes)),drop=FALSE], E = env[,names(coef(fit$fit_env)),drop=FALSE]), start_latent_var = list(coef(fit$fit_genes),coef(fit$fit_env)), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=print)
+	return(fit)
+}
+
+#' @title IMLEGIT to LEGIT
+#' @description Transforms a IMLEGIT model into a LEGIT model
+#' @param fit IMLEGIT model
+#' @param data data.frame of the dataset to be used. 
+#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
+#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
+#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param print If FALSE, nothing except warnings will be printed (Default = TRUE).
+#' @return Returns an object of the class "LEGIT" which is list containing, in the following order: a glm fit of the main model, a glm fit of the genetic score, a glm fit of the environmental score, a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly and the formula.
+#' @examples
+#'	train = example_2way(500, 1, seed=777)
+#'	fit = LEGIT(train$data, train$G, train$E, y ~ G*E, train$coef_G, train$coef_E)
+#'	fit_IMLEGIT = LEGIT_to_IMLEGIT(fit,train$data, train$G, train$E, y ~ G*E)
+#'	fit_LEGIT = IMLEGIT_to_LEGIT(fit_IMLEGIT,train$data, train$G, train$E, y ~ G*E)
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @export
+
+IMLEGIT_to_LEGIT = function(fit, data, genes, env, formula, eps=.001, maxiter=100, family=gaussian, ylim=NULL, print=TRUE){
+	fit = LEGIT(data = data, formula = formula, genes = genes[,names(coef(fit$fit_latent_var$G)),drop=FALSE], env = env[,names(coef(fit$fit_latent_var$E)),drop=FALSE], start_genes = coef(fit$fit_latent_var$G), start_env = coef(fit$fit_latent_var$E), eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=print)
+	return(fit)
+}
+
+#' @title Elastic net for variable selection in IMLEGIT model
+#' @description [Fast and accurate, highly recommended] Apply Elastic Net (from the glmnet package) with IMLEGIT to obtain the order of variable removal that makes the most sense. The output shows the information criterion at every step, so you can decide which variable to retain. It is significantly faster (seconds/minutes instead of hours) than all other variable selection approaches (except for stepwise) and it is very accurate. Note that, as opposed to LEGIT/IMLEGIT, the parameters of variables inside the latent variables are not L1-normalized; instead, its the main model parameters which are L1-normalized. This is needed to make elastic net works. It doesn't matter in the end, because we only care about which variables were removed and we only output the IMLEGIT models without elastic net penalization.
+#' @param data data.frame of the dataset to be used. 
+#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ... (See examples below for more details)
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param latent_var_searched Optional If not null, you must specify a vector containing all indexes of the latent variables you want to use elastic net on. Ex: If latent_var=list(G=genes, E=env), specifying latent_var_search=c(1,2) will use both, latent_var_search=1 will only do it for G, and latent_var_search=2 will only do it for E.
+#' @param cross_validation (Optional) If TRUE, will return cross-validation criterion (slower, but very good criterion).
+#' @param alpha The elasticnet mixing parameter (between 0 and 1). 1 leads to lasso, 0 leads to ridge. See glmnet package manual for more information. We recommend somewhere betwen .50 and 1.
+#' @param standardize If TRUE, standardize all variables inside every latent_var component. Note that if FALSE, glmnet will still standardize and unstandardize, but it will do so for each model (i.e., when at the step of estimating the parameters of latent variable G it standardize them, apply glmnet, then unstandarize them). This means that fixed parameters in the alternating steps are not standardized when standardize=FALSE. In practice, we found that standardize=FALSE leads to weird paths that do not always make sense. In the end, we only care about the order of the variable removal from the glmnet. We highly recommend standardize=TRUE for best results.
+#' @param lambda_path Optional vector of all lambda (penalty term for elastic net, see glmnet package manual). By default, we automatically determine it.
+#' @param lambda_mult scalar which multiplies the maximum lambda (penalty term for elastic net, see glmnet package manual) from the lambda path determined automatically. Sometimes, the maximum lambda found automatically is too big or too small and you may not want to spend the effort to manually set your own lambda path. This is where this comes in, you can simply scale lambda max up or down. (Default = 1)
+#' @param lambda_min minimum lambda (penalty term for elastic net, see glmnet package manual) from the lambda path. (Default = .0001)
+#' @param n_lambda Number of lambda (penalty term for elastic net, see glmnet package manual) in lambda path. Make lower for faster training, or higher for more precision. If you have many variables, make it bigger than 100 (Default = 100).
+#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param classification Set to TRUE if you are doing classification (binary outcome).
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param print If FALSE, nothing except warnings will be printed. (Default = TRUE).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return Returns an object of the class "elastic_net_var_select" which is list containing, in the following order: the criterion at each lambda, the coefficients of the latent variables at each lambda, the fits of each IMLEGIT models for each variable retained at each lambda, and the vector of lambda used.
+#' @examples
+#'	\dontrun{
+#'	N = 1000
+#'	train = example_3way(N, sigma=1, logit=FALSE, seed=7)
+#'	g1_bad = rbinom(N,1,.30)
+#'	g2_bad = rbinom(N,1,.30)
+#'	g3_bad = rbinom(N,1,.30)
+#'	g4_bad = rbinom(N,1,.30)
+#'	g5_bad = rbinom(N,1,.30)
+#'	train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
+#'	lv = list(G=train$G, E=train$E)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E)
+#'	summary(fit)
+#'	best_model(fit, criterion="BIC")
+#'  # Instead of taking the best, if you want the model with "Model index"=17 from summary, do
+#   fit_mychoice = fit$fit[[17]]
+#'	plot(fit)
+#'	# With Cross-validation
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, cross_validation=TRUE, cv_iter=1, cv_folds=5)
+#'	best_model(fit, criterion="cv_R2")
+#'	# Elastic net only applied on G
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(1))
+#'	# Elastic net only applied on E
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2))
+#'	# Most E variables not removed, use lambda_mult > 1 to remove more
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2), lambda_mult=5)
+#'	# Lasso (only L1 regularization)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, alpha=1)
+#'	# Want more lambdas (useful if # of variables is large)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, n_lambda = 200)
+#'	}
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @export
+
+elastic_net_var_select = function(data, latent_var, formula, latent_var_searched=NULL, cross_validation=FALSE, alpha=.75, standardize=TRUE, lambda_path=NULL, lambda_mult=1, lambda_min = .0001, n_lambda = 100, start_latent_var=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, print=TRUE, test_only=FALSE)
 {
 
 	if (!is.null(ylim)){
@@ -2118,7 +1704,7 @@ elastic_net_var_select = function(data, latent_var, formula, latent_var_searched
 
 		# Only do cross-validation, if worth it (i.e., if a variable has been now been added to the list of the ones used). This reduces computation.
 		n_var_zero = sum(ceiling(abs(result$glmnet_coef))==0)
-		if (cross_validation & n_var_zero_prev != n_var_zero & !is.null(result$fit)) result = IMLEGIT_net(data=data, latent_var=latent_var, formula=formula, latent_var_searched=latent_var_searched, classification = classification, cross_validation = TRUE, alpha=alpha, lambda=lambda_path[i], start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, family_string=as.character(substitute(family)), ylim=ylim, print=FALSE, warn=FALSE)
+		if (cross_validation & n_var_zero_prev != n_var_zero & !is.null(result$fit)) result = IMLEGIT_net(data=data, latent_var=latent_var, formula=formula, latent_var_searched=latent_var_searched, classification = classification, cross_validation = TRUE, alpha=alpha, lambda=lambda_path[i], start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, family_string=as.character(substitute(family)), ylim=ylim, print=FALSE, warn=FALSE, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, test_only = test_only)
 		n_var_zero_prev = n_var_zero
 
 		if (!is.null(result$fit)) fit[[i]] = result$fit
@@ -2151,7 +1737,35 @@ elastic_net_var_select = function(data, latent_var, formula, latent_var_searched
 	return(out)
 }
 
-IMLEGIT_net = function(data, latent_var, formula, latent_var_searched=NULL, cross_validation=FALSE, alpha=1, lambda=.0001, start_latent_var=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, print=TRUE, warn=TRUE, family_string=NULL)
+#' @title Independent Multiple Latent Environmental & Genetic InTeraction (IMLEGIT) model with Elastic Net on the latent variables. Do not use on it's own, use elastic_net_var_select instead.
+#' @description Constructs a generalized linear model (glm) with latent variables using alternating optimization. This is an extension of the LEGIT model to accommodate more than 2 latent variables. Note that, as opposed to LEGIT/IMLEGIT, the parameters of variables inside the latent variables are not L1-normalized; instead, its the main model parameters which are L1-normalized. This is needed to make elastic net works. It doesn't matter in the end, because we only care about which variables were removed and we only give the IMLEGIT models without elastic net penalization.
+#' @param data data.frame of the dataset to be used. 
+#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ... (See examples below for more details)
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param latent_var_searched Optional If not null, you must specify a vector containing all indexes of the latent variables you want to use elastic net on. Ex: If latent_var=list(G=genes, E=env), specifying latent_var_search=c(1,2) will use both, latent_var_search=1 will only do it for G, and latent_var_search=2 will only do it for E.
+#' @param cross_validation If TRUE, will return cross-validation criterion (slower)
+#' @param alpha The elasticnet mixing parameter (between 0 and 1). 1 leads to lasso, 0 leads to ridge. See glmnet package manual for more information. We recommend somewhere betwen .50 and 1.
+#' @param lambda Lambda (penalty term for elastic net, see glmnet package manual) (Default = .0001)
+#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param classification Set to TRUE if you are doing classification (binary outcome).
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param print If FALSE, nothing except warnings will be printed. (Default = TRUE).
+#' @param warn If FALSE, it will not show warnings when all variables inside a latent variable are removed. This serves to prevent lots of warning when running elastic_net_var_select (Default = TRUE).
+#' @param family_string Optional String version of the family (gaussian leads to "gaussian"). This is only needed when using elastic_net_var_select. Please ignore this.
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return Returns a list containing, in the following order: a IMLEGIT model, the coefficients of the variables in the latent variables from glmnet models, and the cross-validation results (if asked).
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @export
+
+IMLEGIT_net = function(data, latent_var, formula, latent_var_searched=NULL, cross_validation=FALSE, alpha=1, lambda=.0001, start_latent_var=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, print=TRUE, warn=TRUE, family_string=NULL, test_only=FALSE)
 {
 	if (!is.null(ylim)){
 		if (!is.numeric(ylim) || length(ylim) !=2) stop("ylim must either be NULL or a numeric vector of size two")
@@ -2338,7 +1952,7 @@ IMLEGIT_net = function(data, latent_var, formula, latent_var_searched=NULL, cros
 		weights_latent_var[[i]] = weights_latent_var[[i]][weights_latent_var[[i]]!=0]
 	}
 	result = IMLEGIT(data=data, latent_var=latent_var, formula=formula, start_latent_var=weights_latent_var, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=print)
-	if (cross_validation) result_cv = IMLEGIT_cv(data=data, latent_var=latent_var, formula=formula, start_latent_var=weights_latent_var, eps=eps, maxiter=maxiter, family=family, ylim=ylim, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification)
+	if (cross_validation) result_cv = IMLEGIT_cv(data=data, latent_var=latent_var, formula=formula, start_latent_var=weights_latent_var, eps=eps, maxiter=maxiter, family=family, ylim=ylim, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, test_only = test_only)
 	else result_cv = NULL
 	# print convergences stuff;
 	if (conv_latent_var){
@@ -2350,35 +1964,47 @@ IMLEGIT_net = function(data, latent_var, formula, latent_var_searched=NULL, cros
 	return(list(fit=result, glmnet_coef=unlist(weights_latent_var_backup), fit_cv=result_cv))
 }
 
-summary.elastic_net_var_select = function(object, ...){
-	# Only grab the index of the unique IMLEGIT models (we only care when a variable is dropped out)
-	n_var_zero_prev = -Inf
-	indexes_zero = c()
-
-	for (i in 1:length(object$lambda_path)){
-		n_var_zero = sum(ceiling(abs(object$glmnet_coef[[i]]))==0)
-		if (n_var_zero_prev != n_var_zero){
-			indexes_zero = c(indexes_zero, i)
-			if (i == 1) coef = rbind(pmin(ceiling(abs(object$glmnet_coef[[i]])),1))
-			else coef = rbind(coef,pmin(ceiling(abs(object$glmnet_coef[[i]])),1))
-			colnames(coef) = names(pmin(ceiling(abs(object$glmnet_coef[[i]])),1))
-		}
-		n_var_zero_prev = n_var_zero
-	}
-	results = cbind(object$lambda_path[indexes_zero], indexes_zero, object$results[indexes_zero,,drop=FALSE],coef)
-	colnames(results)[1] = "Lambda"
-	colnames(results)[2] = "Model index"
-	rownames(results) = NULL
-	return(results)
-}
-
-best_model <- function(object, ...) UseMethod("best_model")
-
-best_model.elastic_net_var_select = function(object, criterion, ...){
-	if (criterion == "cv_R2" | criterion=="cv_AUC") i = which.max(object$results[,criterion])
-	else i = which.min(object$results[,criterion])
-	return(list(results=object$results[i,], fit=object$fit[[i]], coef=pmin(ceiling(abs(object$glmnet_coef[[i]])),1), lambda=object$lambda_path[i], index = i))
-}
+#' @title Plot function for the output of elastic_net_var_select
+#' @description Plot of the coefficients of variables inside the latent variables with respect to the log(lambda). This is your typical elastic-net plot.
+#' @param x An object of class "elastic_net_var_select", usually, a result of a call to elastic_net_var_select.
+#' @param lwd Thickness of the lines (Default = 2)
+#' @param start At which lambda to start (from large lambda to small lambda). If start is not 1, we remove some of the large lambda, this can make plot easier to visualize (Default = 1).
+#' @param ... Further arguments passed to or from other methods.
+#' @return Returns the plot of the coefficients of variables inside the latent variables with respect to the log(lambda).
+#' @examples
+#'	\dontrun{
+#'	N = 1000
+#'	train = example_3way(N, sigma=1, logit=FALSE, seed=7)
+#'	g1_bad = rbinom(N,1,.30)
+#'	g2_bad = rbinom(N,1,.30)
+#'	g3_bad = rbinom(N,1,.30)
+#'	g4_bad = rbinom(N,1,.30)
+#'	g5_bad = rbinom(N,1,.30)
+#'	train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
+#'	lv = list(G=train$G, E=train$E)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E)
+#'	summary(fit)
+#'	best_model(fit, criterion="BIC")
+#'  # Instead of taking the best, if you want the model with "Model index"=17 from summary, do
+#   fit_mychoice = fit$fit[[17]]
+#'	plot(fit)
+#'	# With Cross-validation
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, cross_validation=TRUE, cv_iter=1, cv_folds=5)
+#'	best_model(fit, criterion="cv_R2")
+#'	# Elastic net only applied on G
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(1))
+#'	# Elastic net only applied on E
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2))
+#'	# Most E variables not removed, use lambda_mult > 1 to remove more
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2), lambda_mult=5)
+#'	# Lasso (only L1 regularization)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, alpha=1)
+#'	# Want more lambdas (useful if # of variables is large)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, n_lambda = 200)
+#'	}
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @exportS3Method plot elastic_net_var_select
 
 plot.elastic_net_var_select = function(x, lwd=2, start=1, ...){
 	object = x
@@ -2402,6 +2028,141 @@ plot.elastic_net_var_select = function(x, lwd=2, start=1, ...){
 	legend("topright",legend=names(object$glmnet_coef[[n]]), col=RColorBrewer::brewer.pal(n_var_total,"Paired"), lty=lty_, bg="white", lwd=lwd)
 }
 
+#' @title Summary function for the output of elastic_net_var_select
+#' @description Summary function for the output of elastic_net_var_select
+#' @param object An object of class "elastic_net_var_select", usually, a result of a call to elastic_net_var_select.
+#' @param ... Further arguments passed to or from other methods.
+#' @return Returns the unique IMLEGIT models resulting from the glmnet path with associated information. Also gives the cross-validation information if asked.
+#' @examples
+#'	\dontrun{
+#'	N = 1000
+#'	train = example_3way(N, sigma=1, logit=FALSE, seed=7)
+#'	g1_bad = rbinom(N,1,.30)
+#'	g2_bad = rbinom(N,1,.30)
+#'	g3_bad = rbinom(N,1,.30)
+#'	g4_bad = rbinom(N,1,.30)
+#'	g5_bad = rbinom(N,1,.30)
+#'	train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
+#'	lv = list(G=train$G, E=train$E)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E)
+#'	summary(fit)
+#'	best_model(fit, criterion="BIC")
+#'  # Instead of taking the best, if you want the model with "Model index"=17 from summary, do
+#   fit_mychoice = fit$fit[[17]]
+#'	plot(fit)
+#'	# With Cross-validation
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, cross_validation=TRUE, cv_iter=1, cv_folds=5)
+#'	best_model(fit, criterion="cv_R2")
+#'	# Elastic net only applied on G
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(1))
+#'	# Elastic net only applied on E
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2))
+#'	# Most E variables not removed, use lambda_mult > 1 to remove more
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2), lambda_mult=5)
+#'	# Lasso (only L1 regularization)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, alpha=1)
+#'	# Want more lambdas (useful if # of variables is large)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, n_lambda = 200)
+#'	}
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @exportS3Method summary elastic_net_var_select
+
+summary.elastic_net_var_select = function(object, ...){
+	# Only grab the index of the unique IMLEGIT models (we only care when a variable is dropped out)
+	n_var_zero_prev = -Inf
+	indexes_zero = c()
+
+	for (i in 1:length(object$lambda_path)){
+		n_var_zero = sum(ceiling(abs(object$glmnet_coef[[i]]))==0)
+		if (n_var_zero_prev != n_var_zero){
+			indexes_zero = c(indexes_zero, i)
+			if (i == 1) coef = rbind(pmin(ceiling(abs(object$glmnet_coef[[i]])),1))
+			else coef = rbind(coef,pmin(ceiling(abs(object$glmnet_coef[[i]])),1))
+			colnames(coef) = names(pmin(ceiling(abs(object$glmnet_coef[[i]])),1))
+		}
+		n_var_zero_prev = n_var_zero
+	}
+	results = cbind(object$lambda_path[indexes_zero], indexes_zero, object$results[indexes_zero,,drop=FALSE],coef)
+	colnames(results)[1] = "Lambda"
+	colnames(results)[2] = "Model index"
+	rownames(results) = NULL
+	return(results)
+}
+
+#' @title Best model
+#' @description Best model
+#' @param object An object
+#' @param ... Further arguments passed to or from other methods.
+#' @return Best model
+#' @export
+
+best_model <- function(object, ...) UseMethod("best_model")
+
+#' @title Best model from elastic net variable selection
+#' @description Best model from elastic net variable selection (based on selected criteria)
+#' @param object An object of class "elastic_net_var_select", usually, a result of a call to elastic_net_var_select.
+#' @param criterion Criteria used to determine which model is the best. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv_R2"}, uses the cross-validation R-squared, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers. For all criterion, lower is better, with the exception of \code{search_criterion="cv_R2"} and \code{search_criterion="cv_AUC"}.
+#' @param ... Further arguments passed to or from other methods.
+#' @return Returns the best IMLEGIT model resulting from the glmnet path with associated information.
+#' @examples
+#'	\dontrun{
+#'	N = 1000
+#'	train = example_3way(N, sigma=1, logit=FALSE, seed=7)
+#'	g1_bad = rbinom(N,1,.30)
+#'	g2_bad = rbinom(N,1,.30)
+#'	g3_bad = rbinom(N,1,.30)
+#'	g4_bad = rbinom(N,1,.30)
+#'	g5_bad = rbinom(N,1,.30)
+#'	train$G = cbind(train$G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)
+#'	lv = list(G=train$G, E=train$E)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E)
+#'	summary(fit)
+#'	best_model(fit, criterion="BIC")
+#'  # Instead of taking the best, if you want the model with "Model index"=17 from summary, do
+#   fit_mychoice = fit$fit[[17]]
+#'	plot(fit)
+#'	# With Cross-validation
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, cross_validation=TRUE, cv_iter=1, cv_folds=5)
+#'	best_model(fit, criterion="cv_R2")
+#'	# Elastic net only applied on G
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(1))
+#'	# Elastic net only applied on E
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2))
+#'	# Most E variables not removed, use lambda_mult > 1 to remove more
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, c(2), lambda_mult=5)
+#'	# Lasso (only L1 regularization)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, alpha=1)
+#'	# Want more lambdas (useful if # of variables is large)
+#'	fit = elastic_net_var_select(train$data, lv, y ~ G*E, n_lambda = 200)
+#'	}
+#' @import formula.tools stats
+#' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
+#' @exportS3Method best_model elastic_net_var_select
+
+best_model.elastic_net_var_select = function(object, criterion, ...){
+	if (criterion == "cv_R2" | criterion=="cv_AUC") i = which.max(object$results[,criterion])
+	else i = which.min(object$results[,criterion])
+	return(list(results=object$results[i,], fit=object$fit[[i]], coef=pmin(ceiling(abs(object$glmnet_coef[[i]])),1), lambda=object$lambda_path[i], index = i))
+}
+
+#' @title Predictions of LEGIT fits
+#' @description Predictions of LEGIT fits.
+#' @param object An object of class "LEGIT", usually, a result of a call to LEGIT.
+#' @param data data.frame of the dataset to be used.
+#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
+#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
+#' @param ... Further arguments passed to or from other methods.
+#' @return Returns a vector with the predicted values.
+#' @examples
+#'	train = example_2way(250, 1, seed=777)
+#'	test = example_2way(100, 1, seed=666)
+#'	fit = LEGIT(train$data, train$G, train$E, y ~ G*E)
+#'	ssres = sum((test$data$y - predict(fit, test$data, test$G, test$E))^2)
+#'	sstotal = sum((test$data$y - mean(test$data$y))^2)
+#'	R2 = 1 - ssres/sstotal
+#' @exportS3Method predict LEGIT
+
 predict.LEGIT = function(object, data, genes, env, ...){
 	data = data.frame(data)
 	genes = as.matrix(genes, drop=FALSE)
@@ -2414,10 +2175,28 @@ predict.LEGIT = function(object, data, genes, env, ...){
 	if (!is.null(object$crossover) && !object$crossover_fixed) data$E = cbind(-1,env)%*%stats::coef(object[[3]])
 	else if (!is.null(object$crossover) && object$crossover_fixed) data$E = env%*%stats::coef(object[[3]]) - object$crossover
 	else data$E = env%*%stats::coef(object[[3]])
-	results = stats::predict.glm(object[[1]], newdata=data, ...)
+	if (object$true_model_parameters$lme4) results = predict(object[[1]], newdata=data, re.form=NA)
+	else results = stats::predict.glm(object[[1]], newdata=data, ...)
 	if (is.null(object$ylim)) return(results)
 	else return(pmin(pmax(results,object$ylim[1]),object$ylim[2]))
 }
+
+#' @title Predictions of IMLEGIT fits
+#' @description Predictions of IMLEGIT fits.
+#' @param object An object of class "IMLEGIT", usually, a result of a call to IMLEGIT.
+#' @param data data.frame of the dataset to be used.
+#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
+#' @param ... Further arguments passed to or from other methods.
+#' @return Returns a vector with the predicted values.
+#' @examples
+#'	train = example_2way(250, 1, seed=777)
+#'	test = example_2way(100, 1, seed=666)
+#'	fit = IMLEGIT(train$data, list(G=train$G, E=train$E), y ~ G*E)
+#'	ssres = sum((test$data$y - predict(fit, test$data, list(G=test$G, E=test$E)))^2)
+#'	sstotal = sum((test$data$y - mean(test$data$y))^2)
+#'	R2 = 1 - ssres/sstotal
+#'	R2
+#' @exportS3Method predict IMLEGIT
 
 predict.IMLEGIT = function(object, data, latent_var, ...){
 	data = data.frame(data)
@@ -2437,8 +2216,21 @@ predict.IMLEGIT = function(object, data, latent_var, ...){
 	else return(pmin(pmax(results,object$ylim[1]),object$ylim[2]))
 }
 
+
+#' @title Summarizing LEGIT fits
+#' @description Shows the summary for all parts (main, genetic, environmental) of the LEGIT model.
+#' @param object An object of class "LEGIT", usually, a result of a call to LEGIT.
+#' @param ... Further arguments passed to or from other methods.
+#' @return Returns a list of objects of class "summary.glm" containing the summary of each parts (main, genetic, environmental) of the model.
+#' @examples
+#' 	train = example_2way(250, 1, seed=777)
+#'	fit_default = LEGIT(train$data, train$G, train$E, y ~ G*E)
+#'	summary(fit_default)
+#' @exportS3Method summary LEGIT
+
 summary.LEGIT = function(object, ...){
-	lapply(object[1:3],function(object_current, dispersion = NULL, correlation = FALSE, symbolic.cor = FALSE, ...){
+
+	summary_for_glm = function(object_current, dispersion = NULL, correlation = FALSE, symbolic.cor = FALSE, ...){
 		# Using the right values
 		object_current$aic = object$true_model_parameters$AIC
 		object_current$rank = object$true_model_parameters$rank
@@ -2511,8 +2303,26 @@ summary.LEGIT = function(object, ...){
 		}
 		class(ans) <- "summary.glm"
 		return(ans)
-	})
+	}
+
+	if (object$true_model_parameters$lme4){
+		out = list(summary(object[[1]], use.hessian = FALSE), summary_for_glm(object[[2]]), summary_for_glm(object[[3]]))
+	}
+	else out = lapply(object[1:3], summary_for_glm)
+
+	return(out)
 }
+
+#' @title Summarizing IMLEGIT fits
+#' @description Shows the summary for all parts (main and latent variables) of the LEGIT model.
+#' @param object An object of class "IMLEGIT", usually, a result of a call to IMLEGIT.
+#' @param ... Further arguments passed to or from other methods.
+#' @return Returns a list of objects of class "summary.glm" containing the summary of each parts (main and latent variables) of the model.
+#' @examples
+#' 	train = example_2way(250, 1, seed=777)
+#'	fit_default = IMLEGIT(train$data, list(G=train$G, E=train$E), y ~ G*E)
+#'	summary(fit_default)
+#' @exportS3Method summary IMLEGIT
 
 summary.IMLEGIT = function(object, ...){
 	newobject = list(fit_main=object$fit_main)
@@ -2594,7 +2404,57 @@ summary.IMLEGIT = function(object, ...){
 	})
 }
 
-LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, id=NULL, crossover = NULL, crossover_fixed = FALSE){
+#' @title Cross-validation for the LEGIT model
+#' @description Uses cross-validation on the LEGIT model. Note that this is not a very fast implementation since it was written in R.
+#' @param data data.frame of the dataset to be used.
+#' @param genes data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
+#' @param env data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
+#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param classification Set to TRUE if you are doing classification (binary outcome).
+#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
+#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param seed Seed for cross-validation folds.
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param id Optional id of observations, can be a vector or data.frame (only used when returning list of possible outliers).
+#' @param crossover If not NULL, estimates the crossover point of \emph{E} using the provided value as starting point (To test for diathesis-stress vs differential susceptibility).
+#' @param crossover_fixed If TRUE, instead of estimating the crossover point of E, we force/fix it to the value of "crossover". (Used when creating a diathes-stress model) (Default = FALSE).
+#' @param lme4 If TRUE, uses lme4::lmer or lme4::glmer; Note that is an experimental feature, bugs may arise and certain functions may fail. Currently only summary(), plot(), GxE_interaction_test(), LEGIT(), LEGIT_cv() work. Also note that the AIC and certain elements ignore the existence of the genes and environment variables, thus the AIC may not be used for variable selection of the genes and the environment. However, the AIC can still be used to compare models with the same genes and environments. (Default=FALSE).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return If \code{classification} = FALSE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a matrix of the possible outliers (standardized residuals > 2.5 or < -2.5) and their corresponding standardized residuals and standardized pearson residuals. If \code{classification} = TRUE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a vector of the AUC at each iteration, a matrix of the best choice of threshold (based on Youden index) and the corresponding specificity and sensitivity at each iteration, and a list of objects of class "roc" (to be able to make roc curve plots) at each iteration. The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @examples
+#'	\dontrun{
+#'	train = example_3way(250, 2.5, seed=777)
+#'	# Cross-validation 4 times with 5 Folds
+#'	cv_5folds = LEGIT_cv(train$data, train$G, train$E, y ~ G*E*z, cv_iter=4, cv_folds=5)
+#'	cv_5folds
+#'	# Leave-one-out cross-validation (Note: very slow)
+#'	cv_loo = LEGIT_cv(train$data, train$G, train$E, y ~ G*E*z, cv_iter=1, cv_folds=250)
+#'	cv_loo
+#'	# Test set only
+#'	cv_test = LEGIT_cv(train$data, train$G, train$E, y ~ G*E*z, cv_iter=1, cv_folds=5, test_only=TRUE)
+#'	cv_test
+#'	# Cross-validation 4 times with 5 Folds (binary outcome)
+#'	train_bin = example_2way(500, 2.5, logit=TRUE, seed=777)
+#'	cv_5folds_bin = LEGIT_cv(train_bin$data, train_bin$G, train_bin$E, y ~ G*E, 
+#'	cv_iter=4, cv_folds=5, classification=TRUE, family=binomial)
+#'	cv_5folds_bin
+#'	par(mfrow=c(2,2))
+#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[1]])
+#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[2]])
+#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[3]])
+#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[4]])
+#'	}
+#' @references Denis Heng-Yan Leung. \emph{Cross-validation in nonparametric regression with outliers.} Annals of Statistics (2005): 2291-2310.
+#' @export
+
+LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, id=NULL, crossover = NULL, crossover_fixed = FALSE, lme4=FALSE, test_only=FALSE){
 	if (!is.null(ylim)){
 		if (!is.numeric(ylim) || length(ylim) !=2) stop("ylim must either be NULL or a numeric vector of size two")
 	}
@@ -2609,7 +2469,20 @@ LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NU
 	data=data.frame(data)
 	data$G=0
 	data$E=0
-	data = stats::model.frame(formula, data=data, na.action=na.pass)
+
+	formula = stats::as.formula(formula)
+	# Formula with no random effects
+	formula_norand = gsub("\\s", "", deparse(formula))
+	formula_norand = gsub("\\+\\(.*)","",formula_norand)
+	formula_norand = gsub("\\(.*)","",formula_norand)
+	formula_norand = as.formula(formula_norand)
+	# Formula with rand effect put as fixed effects, so model.frame works
+	formula_wrand = gsub("(","",formula, fixed=TRUE)
+	formula_wrand = gsub(")","",formula_wrand, fixed=TRUE)
+	formula_wrand = gsub("||","+",formula_wrand, fixed=TRUE)
+	formula_wrand = gsub("|","+",formula_wrand, fixed=TRUE)
+	data = stats::model.frame(formula_wrand, data=data, na.action=na.pass)
+
 	genes = as.matrix(genes, drop=FALSE)
 	if (is.null(colnames(genes))){
 		if (print) cat("You have not specified column names for genes, they will be named gene1, gene2, ...\n")
@@ -2620,7 +2493,6 @@ LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NU
 		if (print) cat("You have not specified column names for env, they will be named env1, env2, ...\n")
 		colnames(env) = paste0("env",1:NCOL(env))
 	}
-	formula = stats::as.formula(formula)
 
 	# Error message about factors
 	if (sum(apply(data,2,is.numeric)) != NCOL(data) || sum(apply(genes,2,is.numeric)) != NCOL(genes) || sum(apply(env,2,is.numeric)) != NCOL(env)) stop("All variables used must be numeric, factors are not allowed. Please dummy code all categorical variables inside your datasets (data, gene, env)")
@@ -2636,7 +2508,7 @@ LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NU
 	}
 	if (dim(data)[1] <= 0) stop("no valid observation without missing values")
 
-	formula_outcome = get.vars(formula)[1]
+	formula_outcome = get.vars(formula_norand)[1]
 	R2_cv = c()
 	Huber_cv = c()
 	L1_cv = c()
@@ -2667,6 +2539,7 @@ LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NU
 			id = folds[[j]]
 			list = unique(id)
 		}
+		if (test_only) list = list[1] # Only do train/test for the first fold
 		pred=c()
 		y_test=c()
 
@@ -2681,7 +2554,7 @@ LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NU
 			y_test_new = data_test[,formula_outcome]
 
 			# Fit model and add predictions
-			fit_train = LEGIT(data=data_train, genes=genes_train, env=env_train, formula=formula, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover, crossover_fixed = crossover_fixed)
+			fit_train = LEGIT(data=data_train, genes=genes_train, env=env_train, formula=formula, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE, crossover = crossover, crossover_fixed = crossover_fixed, lme4=lme4)
 			pred_new = predict(fit_train, data=data_test,genes=genes_test,env=env_test,type="response", crossover = crossover, crossover_fixed = crossover_fixed)
 			pred = c(pred,pred_new)
 			y_test = c(y_test, y_test_new)
@@ -2734,7 +2607,49 @@ LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NU
 	return(list(R2_cv = R2_cv, Huber_cv = Huber_cv, L1_cv=L1_cv, possible_outliers = possible_outliers_data))
 }
 
-IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, id=NULL){
+#' @title Cross-validation for the IMLEGIT model
+#' @description Uses cross-validation on the IMLEGIT model. Note that this is not a very fast implementation since it was written in R.
+#' @param data data.frame of the dataset to be used.
+#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param classification Set to TRUE if you are doing classification (binary outcome).
+#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param seed Seed for cross-validation folds.
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param id Optional id of observations, can be a vector or data.frame (only used when returning list of possible outliers).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return If \code{classification} = FALSE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a matrix of the possible outliers (standardized residuals > 2.5 or < -2.5) and their corresponding standardized residuals and standardized pearson residuals. If \code{classification} = TRUE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a vector of the AUC at each iteration, a matrix of the best choice of threshold (based on Youden index) and the corresponding specificity and sensitivity at each iteration, and a list of objects of class "roc" (to be able to make roc curve plots) at each iteration. The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @examples
+#'	\dontrun{
+#'	train = example_3way_3latent(250, 1, seed=777)
+#'	# Cross-validation 4 times with 5 Folds
+#'	cv_5folds = IMLEGIT_cv(train$data, train$latent_var, y ~ G*E*Z, cv_iter=4, cv_folds=5)
+#'	cv_5folds
+#'	# Leave-one-out cross-validation (Note: very slow)
+#'	cv_loo = IMLEGIT_cv(train$data, train$latent_var, y ~ G*E*Z, cv_iter=1, cv_folds=250)
+#'	cv_loo
+#'	# Cross-validation 4 times with 5 Folds (binary outcome)
+#'	train_bin = example_2way(500, 2.5, logit=TRUE, seed=777)
+#'	cv_5folds_bin = IMLEGIT_cv(train_bin$data, list(G=train_bin$G, E=train_bin$E), y ~ G*E, 
+#'	cv_iter=4, cv_folds=5, classification=TRUE, family=binomial)
+#'	cv_5folds_bin
+#'	par(mfrow=c(2,2))
+#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[1]])
+#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[2]])
+#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[3]])
+#'	pROC::plot.roc(cv_5folds_bin$roc_curve[[4]])
+#'	}
+#' @references Denis Heng-Yan Leung. \emph{Cross-validation in nonparametric regression with outliers.} Annals of Statistics (2005): 2291-2310.
+#' @export
+
+IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=NULL, eps=.001, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, id=NULL, test_only=FALSE){
 
 	if (!is.null(ylim)){
 		if (!is.numeric(ylim) || length(ylim) !=2) stop("ylim must either be NULL or a numeric vector of size two")
@@ -2823,6 +2738,7 @@ IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=
 			id = folds[[j]]
 			list = unique(id)
 		}
+		if (test_only) list = list[1] # Only do train/test for the first fold
 		pred=c()
 		y_test=c()
 
@@ -2890,7 +2806,15 @@ IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=
 	return(list(R2_cv = R2_cv, Huber_cv = Huber_cv, L1_cv=L1_cv, possible_outliers = possible_outliers_data))
 }
 
-forward_step = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_toadd=NULL, env_toadd=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE){
+#' Internal function that does the forward step for the stepwise function.
+#' @param empty_start_dataset If TRUE, the initial dataset is empty.
+#' @param fit Current best fit.
+#' @param ... Same parameters as in the stepwise function.
+#' @return Returns fit, start_genes, start_env and genes_current, genes_toadd if search="genes" or env_current and env_toadd if search="env".
+#' @keywords internal
+"forward_step"
+
+forward_step = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_toadd=NULL, env_toadd=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, test_only = FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -3025,15 +2949,15 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 		# Set seed
 		if (!is.null(seed)) current_seed = seed
 		else current_seed = NULL
-		if (!empty_start_dataset) fit_cv = LEGIT_cv(data=data, genes=genes_current, env=env_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+		if (!empty_start_dataset) fit_cv = LEGIT_cv(data=data, genes=genes_current, env=env_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 		for (j in 1:elements_N){
-			if (search=="genes") fit_cv_with = LEGIT_cv(data=data, genes=cbind(genes_current,genes_toadd[,j,drop=FALSE]), env=env_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=c(start_genes,0), start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
-			if (search=="env") fit_cv_with = LEGIT_cv(data=data, genes=genes_current, env=cbind(env_current,env_toadd[,j,drop=FALSE]), formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=c(start_env,0), eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+			if (search=="genes") fit_cv_with = LEGIT_cv(data=data, genes=cbind(genes_current,genes_toadd[,j,drop=FALSE]), env=env_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=c(start_genes,0), start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
+			if (search=="env") fit_cv_with = LEGIT_cv(data=data, genes=genes_current, env=cbind(env_current,env_toadd[,j,drop=FALSE]), formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=c(start_env,0), eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 			if (empty_start_dataset) fit_cv_without = NULL
 			else{
 				if (search=="genes") comp_with = stats::complete.cases(data,genes_current,genes_toadd[,j,drop=FALSE],env_current)
 				if (search=="env") comp_with = stats::complete.cases(data,genes_current,env_toadd[,j,drop=FALSE],env_current)
-				if (sum(comp_without) != sum(comp_with)) fit_cv_without = LEGIT_cv(data=data[comp_with,,drop=FALSE], genes=genes_current[comp_with,,drop=FALSE], env=env_current[comp_with,,drop=FALSE], formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+				if (sum(comp_without) != sum(comp_with)) fit_cv_without = LEGIT_cv(data=data[comp_with,,drop=FALSE], genes=genes_current[comp_with,,drop=FALSE], env=env_current[comp_with,,drop=FALSE], formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 				else fit_cv_without = fit_cv
 			}
 			if (search_criterion=="cv"){
@@ -3151,7 +3075,15 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 	if (search=="env") return(list(fit=fit, start_genes=start_genes,start_env=start_env,env_current=env_current,env_toadd=env_toadd))
 }
 
-forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_toadd=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE){
+#' Internal function that does the forward step for the stepwise function.
+#' @param empty_start_dataset If TRUE, the initial dataset is empty.
+#' @param fit Current best fit.
+#' @param ... Same parameters as in the stepwise function.
+#' @return Returns fit, start_latent_var, latent_var_current and latent_var_toadd.
+#' @keywords internal
+"forward_step_IM"
+
+forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_toadd=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, test_only = FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -3279,7 +3211,7 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 		# Set seed
 		if (!is.null(seed)) current_seed = seed
 		else current_seed = NULL
-		if (!empty_start_dataset) fit_cv = IMLEGIT_cv(data=data, latent_var=latent_var_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+		if (!empty_start_dataset) fit_cv = IMLEGIT_cv(data=data, latent_var=latent_var_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 		for (j in 1:elements_N){
 			# Running IMLEGIT with new variable
 			latent_var_new = latent_var_current
@@ -3287,7 +3219,7 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 			latent_var_new[[search]] = cbind(latent_var_current[[search]],latent_var_toadd[[search]][,j,drop=FALSE])
 			start_latent_var_new = start_latent_var
 			start_latent_var_new[[search]] = c(start_latent_var[[search]],0)
-			fit_cv_with = IMLEGIT_cv(data=data, latent_var=latent_var_new, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_new, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+			fit_cv_with = IMLEGIT_cv(data=data, latent_var=latent_var_new, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_new, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 			if (empty_start_dataset) fit_cv_without = NULL
 			else{
 				# If new variable has new missing data: Remove observations missing the new variable and rerun model without the variable (Note : with and without is confusing here)
@@ -3296,7 +3228,7 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 					data_with = data[comp_with,, drop=FALSE]
 					latent_var_with = latent_var_current
 					for (i in 1:k) latent_var_with[[i]] = latent_var_current[[i]][comp_with,, drop=FALSE]
-					fit_cv_without = IMLEGIT_cv(data=data_with, latent_var=latent_var_with, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+					fit_cv_without = IMLEGIT_cv(data=data_with, latent_var=latent_var_with, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 				}
 				else fit_cv_without = fit_cv
 			}
@@ -3396,8 +3328,15 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 	return(list(fit=fit, start_latent_var=start_latent_var, latent_var_current=latent_var_current,latent_var_toadd=latent_var_toadd))
 }
 
+#' Internal function that does the backward step for the stepwise IM function.
+#' @param empty_start_dataset If TRUE, the initial dataset is empty.
+#' @param fit Current best fit.
+#' @param ... Same parameters as in the stepwise function.
+#' @return Returns fit, start_genes, start_env and genes_current, genes_dropped if search="genes" or env_current and env_dropped if search="env".
+#' @keywords internal
+"backward_step"
 
-backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_dropped=NULL, env_dropped=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE){
+backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_dropped=NULL, env_dropped=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, test_only = FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -3512,14 +3451,14 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 		# Set seed
 		if (!is.null(seed)) current_seed = seed
 		else current_seed = NULL
-		fit_cv_with = LEGIT_cv(data=data, genes=genes_current, env=env_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+		fit_cv_with = LEGIT_cv(data=data, genes=genes_current, env=env_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 		for (j in 1:elements_N){
 			# Only do this if not labelled as good
 			if (!good[j]){
 				if (search=="genes") comp_without = stats::complete.cases(data,genes_current[,-j,drop=FALSE],env_current)
 				if (search=="env") comp_without = stats::complete.cases(data,genes_current,env_current[,-j,drop=FALSE])
-				if (search=="genes") fit_cv_without = LEGIT_cv(data=data[comp_with,,drop=FALSE], genes=genes_current[comp_with,-j,drop=FALSE], env=env_current[comp_with,,drop=FALSE], formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes[-j], start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
-				if (search=="env") fit_cv_without = LEGIT_cv(data=data[comp_with,,drop=FALSE], genes=genes_current[comp_with,,drop=FALSE], env=env_current[comp_with,-j,drop=FALSE], formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env[-j], eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+				if (search=="genes") fit_cv_without = LEGIT_cv(data=data[comp_with,,drop=FALSE], genes=genes_current[comp_with,-j,drop=FALSE], env=env_current[comp_with,,drop=FALSE], formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes[-j], start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
+				if (search=="env") fit_cv_without = LEGIT_cv(data=data[comp_with,,drop=FALSE], genes=genes_current[comp_with,,drop=FALSE], env=env_current[comp_with,-j,drop=FALSE], formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env[-j], eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 				if (search_criterion=="cv"){
 					criterion_before[j] = mean(fit_cv_with$R2_cv)
 					criterion_after[j] = mean(fit_cv_without$R2_cv)
@@ -3622,7 +3561,15 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 	if (search=="env") return(list(fit=fit, start_genes=start_genes,start_env=start_env,env_current=env_current,env_dropped=env_dropped))
 }
 
-backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_dropped=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE){
+#' Internal function that does the backward step for the stepwise IM function.
+#' @param empty_start_dataset If TRUE, the initial dataset is empty.
+#' @param fit Current best fit.
+#' @param ... Same parameters as in the stepwise function.
+#' @return Returns fit, start_latent_var, latent_var_current and latent_var_dropped.
+#' @keywords internal
+"backward_step_IM"
+
+backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_dropped=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, test_only = FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -3733,7 +3680,7 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 		# Set seed
 		if (!is.null(seed)) current_seed = seed
 		else current_seed = NULL
-		fit_cv_with = IMLEGIT_cv(data=data, latent_var=latent_var_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+		fit_cv_with = IMLEGIT_cv(data=data, latent_var=latent_var_current, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 		for (j in 1:elements_N){
 			# Only do this if not labelled as good
 			if (!good[j]){
@@ -3752,7 +3699,7 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 				start_latent_var_without = start_latent_var
 				start_latent_var_without[[search]] = start_latent_var[[search]][-j]
 
-				fit_cv_without = IMLEGIT_cv(data=data[comp_with,,drop=FALSE], latent_var=latent_var_without, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_without, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim)
+				fit_cv_without = IMLEGIT_cv(data=data[comp_with,,drop=FALSE], latent_var=latent_var_without, formula=formula, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_without, eps=eps, maxiter=maxiter, family=family, seed=current_seed, ylim=ylim, test_only = test_only)
 				if (search_criterion=="cv"){
 					criterion_before[j] = mean(fit_cv_with$R2_cv)
 					criterion_after[j] = mean(fit_cv_without$R2_cv)
@@ -3836,8 +3783,63 @@ backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_v
 	return(list(fit=fit, start_latent_var=start_latent_var,latent_var_current=latent_var_current,latent_var_dropped=latent_var_dropped))
 }
 
+#' @title Stepwise search for the best subset of genetic variants or environments with the LEGIT model
+#' @description [Fast, recommended for small number of variables] Adds the best variable or drops the worst variable one at a time in the genetic (if \code{search="genes"}) or environmental score (if \code{search="env"}). You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. Note that when the number of variables in \emph{G} and \emph{E} is large, this does not generally converge to the optimal subset, this function is only recommended when you have a small number of variables (e.g. 2 environments, 6 genetic variants). If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
+#' @param data data.frame of the dataset to be used.
+#' @param formula Model formula. Use \emph{E} for the environmental score and \emph{G} for the genetic score. Do not manually code interactions, write them in the formula instead (ex: G*E*z or G:E:z).
+#' @param interactive_mode If TRUE, uses interactive mode. In interactive mode, at each iteration, the user is shown the AIC, BIC, p-value and also the cross-validation \eqn{R^2} if \code{search_criterion="cv"} and the cross-validation AUC if \code{search_criterion="cv_AUC"} for the best 5 variables. The user must then enter a number between 1 and 5 to select the variable to be added, entering anything else will stop the search.
+#' @param genes_original data.frame of the variables inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic).
+#' @param env_original data.frame of the variables inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental).
+#' @param genes_extra data.frame of the additionnal variables to try including inside the genetic score \emph{G} (can be any sort of variable, doesn't even have to be genetic). Set to NULL if using a backward search.
+#' @param env_extra data.frame of the variables to try including inside the environmental score \emph{E} (can be any sort of variable, doesn't even have to be environmental). Set to NULL if using a backward search.
+#' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
+#' @param search If \code{search="genes"}, uses a stepwise search for the genetic score variables. If \code{search="env"}, uses a stepwise search for the environmental score variables. If \code{search="both"}, uses a stepwise search for both the gene and environmental score variables (Default = "both").
+#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
+#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
+#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
+#' @param max_steps Maximum number of steps taken (Default = 50).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param classification Set to TRUE if you are doing classification (binary outcome).
+#' @param start_genes Optional starting points for genetic score (must be the same length as the number of columns of \code{genes}).
+#' @param start_env Optional starting points for environmental score (must be the same length as the number of columns of \code{env}).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param seed Seed for cross-validation folds.
+#' @param print If TRUE, print all the steps and notes/warnings. Highly recommended unless you are batch running multiple stepwise searchs. (Default=TRUE).
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param remove_miss If TRUE, remove missing data completely, otherwise missing data is only removed when adding or dropping a variable (Default = FALSE).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return Returns an object of the class "LEGIT" which is list containing, in the following order: a glm fit of the main model, a glm fit of the genetic score, a glm fit of the environmental score, a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
+#' @examples
+#'	\dontrun{
+#'	## Continuous example
+#'	train = example_3way(250, 2.5, seed=777)
+#'	# Forward search for genes based on BIC (in interactive mode)
+#'	forward_genes_BIC = stepwise_search(train$data, genes_extra=train$G, env_original=train$E,
+#'	formula=y ~ E*G*z,search_type="forward", search="genes", search_criterion="BIC",
+#'	interactive_mode=TRUE)
+#'	# Bidirectional-backward search for environments based on cross-validation error
+#'	bidir_backward_env_cv = stepwise_search(train$data, genes_original=train$G, env_original=train$E,
+#'	formula=y ~ E*G*z,search_type="bidirectional-backward", search="env", search_criterion="cv")
+#'	## Binary example
+#'	train_bin = example_2way(500, 2.5, logit=TRUE, seed=777)
+#'	# Forward search for genes based on cross-validated AUC (in interactive mode)
+#'	forward_genes_AUC = stepwise_search(train_bin$data, genes_extra=train_bin$G, 
+#'	env_original=train_bin$E, formula=y ~ E*G,search_type="forward", search="genes", 
+#'	search_criterion="cv_AUC", classification=TRUE, family=binomial, interactive_mode=TRUE)
+#'	# Forward search for genes based on AIC
+#'	bidir_forward_genes_AIC = stepwise_search(train_bin$data, genes_extra=train_bin$G, 
+#'	env_original=train_bin$E, formula=y ~ E*G,search_type="bidirectional-forward", search="genes", 
+#'	search_criterion="AIC", classification=TRUE, family=binomial)
+#'	}
+#' @export
 
-stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original=NULL, env_original=NULL, genes_extra=NULL, env_extra=NULL, search_type="bidirectional-forward", search="both", search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, remove_miss=FALSE){
+stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original=NULL, env_original=NULL, genes_extra=NULL, env_extra=NULL, search_type="bidirectional-forward", search="both", search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, remove_miss=FALSE, test_only = FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -3930,7 +3932,7 @@ stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original
 
 		for (i in 1:max_steps){
 			if (print) cat(paste0("[Iteration: ",i,"]\n"))
-			results = forward_step(empty_start_dataset=empty_start_dataset, fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, genes_current=genes_current, env_current=env_current, genes_toadd=genes_toadd, env_toadd=env_toadd, search=search_current, search_criterion=search_criterion, p_threshold = forward_exclude_p_bigger, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print)
+			results = forward_step(empty_start_dataset=empty_start_dataset, fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, genes_current=genes_current, env_current=env_current, genes_toadd=genes_toadd, env_toadd=env_toadd, search=search_current, search_criterion=search_criterion, p_threshold = forward_exclude_p_bigger, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print, test_only = test_only)
 			if (is.null(results)){
 				if (search=="both"){
 					if (search_current == "genes"){
@@ -4000,7 +4002,7 @@ stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original
 
 		for (i in 1:max_steps){
 			if (print) cat(paste0("[Iteration: ",i,"]\n"))
-			results = backward_step(fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, genes_current=genes_current, genes_dropped=genes_dropped, env_current=env_current, env_dropped=env_dropped, search=search_current, search_criterion=search_criterion, p_threshold = backward_exclude_p_smaller, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print)
+			results = backward_step(fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, genes_current=genes_current, genes_dropped=genes_dropped, env_current=env_current, env_dropped=env_dropped, search=search_current, search_criterion=search_criterion, p_threshold = backward_exclude_p_smaller, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print, test_only = test_only)
 			if (is.null(results)){
 				if (search=="both"){
 					if (search_current == "genes"){
@@ -4122,7 +4124,7 @@ stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original
 		for (i in 1:max_steps){
 			if (print) cat(paste0("[Iteration: ",i,"]\n"))
 			if (direction=="forward"){
-				results = forward_step(empty_start_dataset=empty_start_dataset, fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, genes_current=genes_current, env_current=env_current, genes_toadd=genes_toadd_ordrop, env_toadd=env_toadd_ordrop, search=search_current, search_criterion=search_criterion, p_threshold = forward_exclude_p_bigger, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print)
+				results = forward_step(empty_start_dataset=empty_start_dataset, fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, genes_current=genes_current, env_current=env_current, genes_toadd=genes_toadd_ordrop, env_toadd=env_toadd_ordrop, search=search_current, search_criterion=search_criterion, p_threshold = forward_exclude_p_bigger, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print, test_only = test_only)
 				if (is.null(results)) forward_failed=TRUE
 				else{
 					if (search_current == "genes") E_conv = FALSE
@@ -4181,7 +4183,7 @@ stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original
 			if (direction=="backward"){
 				# Can't backward if only one remaining variable
 				if (!((NCOL(genes_current)<=1 && search_current=="genes") || (NCOL(env_current)<=1 && search_current=="env"))){
-					results = backward_step(fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, genes_current=genes_current, genes_dropped=genes_toadd_ordrop, env_current=env_current, env_dropped=env_toadd_ordrop, search=search_current, search_criterion=search_criterion, p_threshold = backward_exclude_p_smaller, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print)
+					results = backward_step(fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, genes_current=genes_current, genes_dropped=genes_toadd_ordrop, env_current=env_current, env_dropped=env_toadd_ordrop, search=search_current, search_criterion=search_criterion, p_threshold = backward_exclude_p_smaller, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_genes=start_genes, start_env=start_env, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print, test_only = test_only)
 					if (is.null(results)) backward_failed=TRUE
 					else{
 						if (search_current == "genes") E_conv = FALSE
@@ -4249,8 +4251,53 @@ stepwise_search = function(data, formula, interactive_mode=FALSE, genes_original
 	return(fit)
 }
 
+#' @title Stepwise search for the best subset of elements in the latent variables with the IMLEGIT model
+#' @description [Fast, recommended  when the number of variables is small] Adds the best variable or drops the worst variable one at a time in the latent variables. You can select the desired search criterion (AIC, BIC, cross-validation error, cross-validation AUC) to determine which variable is the best/worst and should be added/dropped. Note that when the number of variables in \emph{G} and \emph{E} is large, this does not generally converge to the optimal subset, this function is only recommended when you have a small number of variables (e.g. 2 environments, 6 genetic variants). If using cross-validation (\code{search_criterion="cv"} or \code{search_criterion="cv_AUC"}), to prevent cross-validating with each variable (extremely slow), we recommend setting a p-value threshold (\code{p_threshold}) and forcing the algorithm not to look at models with bigger AIC (\code{exclude_worse_AIC=TRUE}).
+#' @param data data.frame of the dataset to be used.
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param interactive_mode If TRUE, uses interactive mode. In interactive mode, at each iteration, the user is shown the AIC, BIC, p-value and also the cross-validation \eqn{R^2} if \code{search_criterion="cv"} and the cross-validation AUC if \code{search_criterion="cv_AUC"} for the best 5 variables. The user must then enter a number between 1 and 5 to select the variable to be added, entering anything else will stop the search.
+#' @param latent_var_original list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
+#' @param latent_var_extra list of data.frame (with the same structure as latent_var_original) containing the additionnal elements to try including inside the latent variables. Set to NULL if using a backward search.
+#' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
+#' @param search If \code{search=0}, uses a stepwise search for all latent variables. Otherwise, if search = i, uses a stepwise search on the i-th latent variable (Default = 0).
+#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
+#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
+#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
+#' @param max_steps Maximum number of steps taken (Default = 50).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param classification Set to TRUE if you are doing classification (binary outcome).
+#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param seed Seed for cross-validation folds.
+#' @param print If TRUE, print all the steps and notes/warnings. Highly recommended unless you are batch running multiple stepwise searchs. (Default=TRUE).
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param remove_miss If TRUE, remove missing data completely, otherwise missing data is only removed when adding or dropping a variable (Default = FALSE).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return Returns an object of the class "IMLEGIT" which is list containing, in the following order: a glm fit of the main model, a list of the glm fits of the latent variables and a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
+#' @examples
+#'	\dontrun{
+#'	## Example
+#'	train = example_3way_3latent(250, 1, seed=777)
+#'	# Forward search for genes based on BIC (in interactive mode)
+#'	forward_genes_BIC = stepwise_search_IM(train$data, 
+#'	latent_var_original=list(G=NULL, E=train$latent_var$E, Z=train$latent_var$Z),
+#'	latent_var_extra=list(G=train$latent_var$G,E=NULL,Z=NULL), 
+#'	formula=y ~ E*G*Z,search_type="forward", search=1, search_criterion="BIC",
+#'	interactive_mode=TRUE)
+#'	# Bidirectional-backward search for everything based on AIC
+#'	bidir_backward_AIC = stepwise_search_IM(train$data, latent_var_extra=NULL, 
+#'	latent_var_original=train$latent_var,
+#'	formula=y ~ E*G*Z,search_type="bidirectional-backward", search=0, search_criterion="AIC")
+#'	}
+#' @export
 
-stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_original=NULL, latent_var_extra=NULL, search_type="bidirectional-forward", search=0, search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, remove_miss=FALSE){
+stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_original=NULL, latent_var_extra=NULL, search_type="bidirectional-forward", search=0, search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, remove_miss=FALSE, test_only=FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -4353,7 +4400,7 @@ stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_
 
 		for (i in 1:max_steps){
 			if (print) cat(paste0("[Iteration: ",i,"]\n"))
-			results = forward_step_IM(empty_start_dataset=empty_start_dataset, fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, latent_var_current=latent_var_current, latent_var_toadd=latent_var_toadd, search=search_current, search_criterion=search_criterion, p_threshold = forward_exclude_p_bigger, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print)
+			results = forward_step_IM(empty_start_dataset=empty_start_dataset, fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, latent_var_current=latent_var_current, latent_var_toadd=latent_var_toadd, search=search_current, search_criterion=search_criterion, p_threshold = forward_exclude_p_bigger, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print, test_only = test_only)
 			if (is.null(results)){
 				if (search == 0){
 					latent_var_conv[search_current] = TRUE
@@ -4406,7 +4453,7 @@ stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_
 
 		for (i in 1:max_steps){
 			if (print) cat(paste0("[Iteration: ",i,"]\n"))
-			results = backward_step_IM(fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, latent_var_current=latent_var_current, latent_var_dropped=latent_var_dropped, search=search_current, search_criterion=search_criterion, p_threshold = backward_exclude_p_smaller, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print)
+			results = backward_step_IM(fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, latent_var_current=latent_var_current, latent_var_dropped=latent_var_dropped, search=search_current, search_criterion=search_criterion, p_threshold = backward_exclude_p_smaller, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print, test_only = test_only)
 			if (is.null(results)){
 				if (search==0){
 					latent_var_conv[search_current] = TRUE
@@ -4496,7 +4543,7 @@ stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_
 		for (i in 1:max_steps){
 			if (print) cat(paste0("[Iteration: ",i,"]\n"))
 			if (direction=="forward"){
-				results = forward_step_IM(empty_start_dataset=empty_start_dataset, fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, latent_var_current=latent_var_current, latent_var_toadd=latent_var_toadd_ordrop, search=search_current, search_criterion=search_criterion, p_threshold = forward_exclude_p_bigger, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print)
+				results = forward_step_IM(empty_start_dataset=empty_start_dataset, fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, latent_var_current=latent_var_current, latent_var_toadd=latent_var_toadd_ordrop, search=search_current, search_criterion=search_criterion, p_threshold = forward_exclude_p_bigger, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print, test_only = test_only)
 				if (is.null(results)) forward_failed=TRUE
 				else{
 					if (search == 0) latent_var_conv = rep(FALSE, k)
@@ -4534,7 +4581,7 @@ stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_
 			if (direction=="backward"){
 				# Can't backward if only one remaining variable
 				if (!(NCOL(latent_var_current[[search_current]])<=1)){
-					results = backward_step_IM(fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, latent_var_current=latent_var_current, latent_var_dropped=latent_var_toadd_ordrop, search=search_current, search_criterion=search_criterion, p_threshold = backward_exclude_p_smaller, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print)
+					results = backward_step_IM(fit=fit, data=data, formula=formula, interactive_mode=interactive_mode, latent_var_current=latent_var_current, latent_var_dropped=latent_var_toadd_ordrop, search=search_current, search_criterion=search_criterion, p_threshold = backward_exclude_p_smaller, exclude_worse_AIC=exclude_worse_AIC, max_steps = max_steps, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var, eps=eps, maxiter=maxiter, family=family, seed=seed, print=print, test_only = test_only)
 					if (is.null(results)) backward_failed=TRUE
 					else{
 						# If this one didn't converge then all others have to be retried again since things can change
@@ -4583,8 +4630,56 @@ stepwise_search_IM = function(data, formula, interactive_mode=FALSE, latent_var_
 	return(fit)
 }
 
+#' @title Bootstrap variable selection (for IMLEGIT)
+#' @description [Very slow, not recommended] Creates bootstrap samples, runs a stepwise search on all of them and then reports the percentage of times that each variable was selected. This is very computationally demanding. With small sample sizes, variable selection can be unstable and bootstrap can be used to give us an idea of the degree of certitude that a variable should be included or not.
+#' @param data data.frame of the dataset to be used.
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param boot_iter number of bootstrap samples (Default = 1000).
+#' @param boot_size Optional size of the bootstrapped samples (Default = number of observations).
+#' @param boot_group Optional vector which represents the group associated with each observation. Sampling will be done by group instead of by observations (very important if you have longitudinal data). The sample sizes of the bootstrap samples might differ by up to "\code{boot_size} - maximum group size" observations.
+#' @param latent_var_original list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
+#' @param latent_var_extra list of data.frame (with the same structure as latent_var_original) containing the additional elements to try including inside the latent variables. Set to NULL if using a backward search.
+#' @param search_type If \code{search_type="forward"}, uses a forward search. If \code{search_type="backward"}, uses backward search. If \code{search_type="bidirectional-forward"}, uses bidirectional search (that starts as a forward search). If \code{search_type="bidirectional-backward"}, uses bidirectional search (that starts as a backward search).
+#' @param search If \code{search=0}, uses a stepwise search for all latent variables. Otherwise, if search = i, uses a stepwise search on the i-th latent variable (Default = 0).
+#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC (Default = "AIC").
+#' @param forward_exclude_p_bigger If p-value > \code{forward_exclude_p_bigger}, we do not consider the variable for inclusion in the forward steps (Default = .20). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 1 to prevent any exclusion here.
+#' @param backward_exclude_p_smaller If p-value < \code{backward_exclude_p_smaller}, we do not consider the variable for removal in the backward steps (Default = .01). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to 0 to prevent any exclusion here.
+#' @param exclude_worse_AIC If AIC with variable > AIC without variable, we ignore the variable (Default = TRUE). This is an exclusion option which purpose is skipping variables that are likely not worth looking to make the algorithm faster, especially with cross-validation. Set to FALSE to prevent any exclusion here.
+#' @param max_steps Maximum number of steps taken (Default = 50).
+#' @param start_latent_var Optional list of starting points for each latent variable (The list must have the same length as the number of latent variables and each element of the list must have the same length as the number of variables of the corresponding latent variable).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results).
+#' @param maxiter Maximum number of iterations.
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param seed Optional seed for bootstrap.
+#' @param progress If TRUE, shows the progress done (Default=TRUE).
+#' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores - 1 (Default = 1).
+#' @param best_subsets If \code{best_subsets = k}, the output will show the k most frequently chosen subsets of variables (Default = 5)
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return Returns a list of vectors containing the percentage of times that each variable was selected within each latent variable.
+#' @examples
+#'	\dontrun{
+#'	## Example
+#'	train = example_3way_3latent(250, 2, seed=777)
+#'	# Bootstrap with Bidirectional-backward search for everything based on AIC
+#'	# Normally you should use a lot more than 10 iterations and extra CPUs (n_cluster)
+#'	boot = bootstrap_var_select(train$data, latent_var_extra=NULL, 
+#'	latent_var_original=train$latent_var,
+#'	formula=y ~ E*G*Z,search_type="bidirectional-backward", search=0, 
+#'	search_criterion="AIC", boot_iter=10, n_cluster=1)
+#'	# Assuming it's longitudinal with 5 timepoints, even though it's not
+#'	id = factor(rep(1:50,each=5))
+#'	boot_longitudinal = bootstrap_var_select(train$data, latent_var_extra=NULL, 
+#'	latent_var_original=train$latent_var,
+#'	formula=y ~ E*G*Z,search_type="bidirectional-backward", search=0, 
+#'	search_criterion="AIC", boot_iter=10, n_cluster=1, boot_group=id)
+#'	}
+#' @import foreach snow doSNOW utils iterators
+#' @references Peter C Austin and Jack V Tu. \emph{Bootstrap Methods for Developing Predictive Models} (2012). dx.doi.org/10.1198/0003130043277.
+#' @references Mark Reiser, Lanlan Yao, Xiao Wang, Jeanne Wilcox and Shelley Gray. \emph{A Comparison of Bootstrap Confidence Intervals for Multi-level Longitudinal Data Using Monte-Carlo Simulation} (2017). 10.1007/978-981-10-3307-0_17.
+#' @export
 
-bootstrap_var_select = function(data, formula, boot_iter=1000, boot_size=NULL, boot_group=NULL, latent_var_original=NULL, latent_var_extra=NULL, search_type="bidirectional-forward", search=0, search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, start_latent_var=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, progress=TRUE, n_cluster = 1, best_subsets=5){
+bootstrap_var_select = function(data, formula, boot_iter=1000, boot_size=NULL, boot_group=NULL, latent_var_original=NULL, latent_var_extra=NULL, search_type="bidirectional-forward", search=0, search_criterion="AIC", forward_exclude_p_bigger = .20, backward_exclude_p_smaller = .01, exclude_worse_AIC=TRUE, max_steps = 100, start_latent_var=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, progress=TRUE, n_cluster = 1, best_subsets=5, test_only=FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -4726,8 +4821,47 @@ bootstrap_var_select = function(data, formula, boot_iter=1000, boot_size=NULL, b
 	return(list(var_select=var_select, subset_select=unique_subset_count, best_subset=unique_subset))
 }
 
+#' @title Parallel genetic algorithm variable selection (for IMLEGIT)
+#' @description [Very slow, recommended when the number of variables is large] Use a standard genetic algorithm with single-point crossover and a single mutation ran in parallel to find the best subset of variables. The percentage of times that each variable is included the final populations is also given. This is very computationally demanding but this finds much better solutions than either stepwise search or bootstrap variable selection.
+#' @param data data.frame of the dataset to be used.
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param parallel_iter number of parallel genetic algorithms (Default = 10). I recommend using 2-4 times the number of CPU cores used.
+#' @param entropy_threshold Entropy threshold for convergence of the population (Default = .10). Note that not reaching the entropy threshold just means that the population has some diversity, this is not necessarily a bad thing. Reaching the threshold is not necessary but if a population reach the threshold, we want it to stop reproducing (rather than continuing until \code{maxgen}) since the future generations won't change much.
+#' @param popsize Size of the population (Default = 25). Between 25 and 100 is generally adequate.
+#' @param mutation_prob Probability of mutation (Default = .50). A single variable is selected for mutation and it is mutated with probability \code{mutation_prob}. If the mutation causes a latent variable to become empty, no mutation is done. Using a small value (close to .05) will lead to getting more stuck in suboptimal solutions but using a large value (close to 1) will greatly increase the computing time because it will have a hard time reaching the entropy threshold.
+#' @param first_pop optional Starting initial population which is used instead of a fully random one. Mutation is also done on the initial population to increase variability.
+#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
+#' @param search_criterion Criterion used to determine which variable is the best to add or worst to drop. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @param maxgen Maximum number of generations (iterations) of the genetic algorithm (Default = 100). Between 50 and 200 generations is generally adequate.
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results). Note that using .001 rather than .01 (default) can more than double or triple the computing time of genetic_var_select.
+#' @param maxiter Maximum number of iterations.
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param seed Optional seed.
+#' @param progress If TRUE, shows the progress done (Default=TRUE).
+#' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores - 1 (Default = 1).
+#' @param best_subsets If \code{best_subsets = k}, the output will show the k best subsets of variables (Default = 5)
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param classification Set to TRUE if you are doing classification and cross-validation (binary outcome).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return Returns a list of vectors containing the percentage of times that each variable was included in the final populations, the criterion of the best k models, the starting points of the best k models (with the names of the best variables) and the entropy of the populations.
+#' @examples
+#'	\dontrun{
+#'	## Example
+#'	train = example_3way_3latent(250, 2, seed=777)
+#'	# Genetic algorithm based on BIC
+#'	# Normally you should use a lot more than 2 populations with 10 generations
+#'	ga = genetic_var_select(train$data, latent_var=train$latent_var,
+#'	formula=y ~ E*G*Z, search_criterion="AIC", parallel_iter=2, maxgen = 10)
+#'	}
+#' @import foreach snow doSNOW utils iterators
+#' @references Mu Zhu, & Hugh Chipman. \emph{Darwinian evolution in parallel universes: A parallel genetic algorithm for variable selection} (2006). Technometrics, 48(4), 491-502.
+#' @export
 
-genetic_var_select = function(data, formula, parallel_iter=10, entropy_threshold=.10, popsize=25, mutation_prob=.50, first_pop=NULL, latent_var=NULL, search_criterion="AIC", maxgen = 100, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, progress=TRUE, n_cluster = 1, best_subsets=5, cv_iter=5, cv_folds=5, folds=NULL, Huber_p=1.345, classification=FALSE){
+genetic_var_select = function(data, formula, parallel_iter=10, entropy_threshold=.10, popsize=25, mutation_prob=.50, first_pop=NULL, latent_var=NULL, search_criterion="AIC", maxgen = 100, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, progress=TRUE, n_cluster = 1, best_subsets=5, cv_iter=5, cv_folds=5, folds=NULL, Huber_p=1.345, classification=FALSE, test_only=FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -4941,7 +5075,44 @@ genetic_var_select = function(data, formula, parallel_iter=10, entropy_threshold
 	return(list(var_select=var_select, best_subsets_crit=list_best_latent_var_crit, best_subsets_start=list_best_latent_var_start, entropy=list_entropy, n_step=list_n_step))
 }
 
-nes_var_select = function(data, formula, parallel_iter=3, alpha=c(1,5,10), entropy_threshold=.05, popsize=25, lr = .2, prop_ignored=.50, latent_var=NULL, search_criterion="AICc", n_cluster=3, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, progress=TRUE, cv_iter=5, cv_folds=5, folds=NULL, Huber_p=1.345, classification=FALSE, print=FALSE){
+#' @title Parallel natural evolutionary variable selection assuming bernouilli distribution (for IMLEGIT)
+#' @description [Slow, highly recommended when the number of variables is large] Use natural evolution strategy (nes) gradient descent ran in parallel to find the best subset of variables. It is often as good as genetic algorithms but much faster so it is the recommended variable selection function to use as default. Note that this approach assumes that the inclusion of a variable does not depends on whether other variables are included (i.e. it assumes independent bernouilli distributions); this is generally not true but this approach still converge well and running it in parallel increases the probability of reaching the global optimum.
+#' @param data data.frame of the dataset to be used.
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param parallel_iter number of parallel tries (Default = 3). For speed, I recommend using the number of CPU cores.
+#' @param alpha vector of the parameter for the Dirichlet distribution of the starting points (Assuming a symmetric Dirichlet distribution with only one parameter). If the vector has size N and parralel_iter=K, we use alpha[1], ..., alpha[N], alpha[1], ... , alpha[N], ... for parallel_iter 1 to K respectively. We assume a dirichlet distribution for the starting points to get a bit more variability and make sure we are not missing on a great subset of variable that doesn't converge to the global optimum with the default starting points. Use bigger values for less variability and lower values for more variability (Default = c(1,5,10)).
+#' @param entropy_threshold Entropy threshold for convergence of the population (Default = .10). The smaller the entropy is, the less diversity there is in the population, which means convergence.
+#' @param popsize Size of the population, the number of subsets of variables sampled at each iteration (Default = 25). Between 25 and 100 is generally adequate.
+#' @param lr learning rate of the gradient descent, higher will converge faster but more likely to get stuck in local optium (Default = .2).
+#' @param prop_ignored The proportion of the population that are given a fixed fitness value, thus their importance is greatly reduce. The higher it is, the longer it takes to converge. Highers values makes the algorithm focus more on favorizing the good subsets of variables than penalizing the bad subsets (Default = .50).
+#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
+#' @param search_criterion Criterion used to determine which variable subset is the best. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores (Default = 1).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results). Note that using .001 rather than .01 (default) can more than double or triple the computing time of genetic_var_select.
+#' @param maxiter Maximum number of iterations.
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param seed Optional seed.
+#' @param progress If TRUE, shows the progress done (Default=TRUE).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param classification Set to TRUE if you are doing classification and cross-validation (binary outcome).
+#' @param print If TRUE, print the parameters of the search distribution and the entropy at each iteration. Note: Only works using Rterm.exe in Windows due to parallel clusters. (Default = FALSE).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return Returns a list containing the best subset's fit, cross-validation output, latent variables and starting points.
+#' @examples
+#'	\dontrun{
+#'	## Example
+#'	train = example_3way_3latent(250, 2, seed=777)
+#'	nes = nes_var_select(train$data, latent_var=train$latent_var,
+#'	formula=y ~ E*G*Z)
+#'	}
+#' @import foreach snow doSNOW utils iterators
+#' @export
+
+nes_var_select = function(data, formula, parallel_iter=3, alpha=c(1,5,10), entropy_threshold=.05, popsize=25, lr = .2, prop_ignored=.50, latent_var=NULL, search_criterion="AICc", n_cluster=3, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, progress=TRUE, cv_iter=5, cv_folds=5, folds=NULL, Huber_p=1.345, classification=FALSE, print=FALSE, test_only=FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -5066,7 +5237,7 @@ nes_var_select = function(data, formula, parallel_iter=3, alpha=c(1,5,10), entro
 					else if (search_criterion=="AICc") crit[p] = -fit$true_model_parameters$AICc
 					else if (search_criterion=="BIC") crit[p] = -fit$true_model_parameters$BIC
 					else{
-						fit_cv = IMLEGIT_cv(data=data, formula=formula, latent_var = latent_var_pop, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_pop[[p]], eps=eps, maxiter=maxiter, family=family, ylim=ylim)
+						fit_cv = IMLEGIT_cv(data=data, formula=formula, latent_var = latent_var_pop, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_pop[[p]], eps=eps, maxiter=maxiter, family=family, ylim=ylim, test_only = test_only)
 						if (search_criterion=="cv") crit[p] = mean(fit_cv$R2_cv)
 						else if (search_criterion=="cv_Huber") crit[p] = -mean(fit_cv$Huber_cv)
 						else if (search_criterion=="cv_L1") crit[p] = -mean(fit_cv$L1_cv)
@@ -5115,11 +5286,48 @@ nes_var_select = function(data, formula, parallel_iter=3, alpha=c(1,5,10), entro
 		}
 	}
 	best_fit = IMLEGIT(data=data, formula=formula, latent_var = latent_var_best, start_latent_var=start_latent_var_best, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE)
-	best_fit_cv = IMLEGIT_cv(data=data, formula=formula, latent_var = latent_var_best, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_best, eps=eps, maxiter=maxiter, family=family, ylim=ylim)
+	best_fit_cv = IMLEGIT_cv(data=data, formula=formula, latent_var = latent_var_best, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_best, eps=eps, maxiter=maxiter, family=family, ylim=ylim, test_only = test_only)
 	return(list(fit=best_fit, fit_cv=best_fit_cv, data=data, latent_var=latent_var_best, start_latent_var=start_latent_var_best))
 }
 
-r1nes_var_select = function(data, formula, parallel_iter=3, alpha=c(1,5,10), entropy_threshold=.05, popsize=25, lr = .2, prop_ignored=.50, latent_var=NULL, search_criterion="AICc", n_cluster=3, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, progress=TRUE, cv_iter=5, cv_folds=5, folds=NULL, Huber_p=1.345, classification=FALSE, print=FALSE){
+#' @title Parallel natural evolutionary variable selection assuming multivariate normal search distribution with a simple covariance matrix parametrization (for IMLEGIT)
+#' @description [Slow, highly recommended when the number of variables is large] Use natural evolution strategy (nes) gradient descent ran in parallel to find the best subset of variables. It is often as good as genetic algorithms but much faster so it is the recommended variable selection function to use as default. This is slower than nes_var_select but much less likely to get stuck into local optimum so the parallelization is not really needed.
+#' @param data data.frame of the dataset to be used.
+#' @param formula Model formula. The names of \code{latent_var} can be used in the formula to represent the latent variables. If names(\code{latent_var}) is NULL, then L1, L2, ... can be used in the formula to represent the latent variables. Do not manually code interactions, write them in the formula instead (ex: G*E1*E2 or G:E1:E2).
+#' @param parallel_iter number of parallel tries (Default = 3). For speed, I recommend using the number of CPU cores.
+#' @param alpha vector of the parameter for the Dirichlet distribution of the starting points (Assuming a symmetric Dirichlet distribution with only one parameter). If the vector has size N and parralel_iter=K, we use alpha[1], ..., alpha[N], alpha[1], ... , alpha[N], ... for parallel_iter 1 to K respectively. We assume a dirichlet distribution for the starting points to get a bit more variability and make sure we are not missing on a great subset of variable that doesn't converge to the global optimum with the default starting points. Use bigger values for less variability and lower values for more variability (Default = c(1,5,10)).
+#' @param entropy_threshold Entropy threshold for convergence of the population (Default = .10). The smaller the entropy is, the less diversity there is in the population, which means convergence.
+#' @param popsize Size of the population, the number of subsets of variables sampled at each iteration (Default = 25). Between 25 and 100 is generally adequate.
+#' @param lr learning rate of the gradient descent, higher will converge faster but more likely to get stuck in local optium (Default = .2).
+#' @param prop_ignored The proportion of the population that are given a fixed fitness value, thus their importance is greatly reduce. The higher it is, the longer it takes to converge. Highers values makes the algorithm focus more on favorizing the good subsets of variables than penalizing the bad subsets (Default = .50).
+#' @param latent_var list of data.frame. The elements of the list are the datasets used to construct each latent variable. For interpretability and proper convergence, not using the same variable in more than one latent variable is highly recommended. It is recommended to set names to the list elements to prevent confusion because otherwise, the latent variables will be named L1, L2, ...
+#' @param search_criterion Criterion used to determine which variable subset is the best. If \code{search_criterion="AIC"}, uses the AIC, if \code{search_criterion="AICc"}, uses the AICc, if \code{search_criterion="BIC"}, uses the BIC, if \code{search_criterion="cv"}, uses the cross-validation error, if \cr \code{search_criterion="cv_AUC"}, uses the cross-validated AUC, if \code{search_criterion="cv_Huber"}, uses the Huber cross-validation error, if \code{search_criterion="cv_L1"}, uses the L1-norm cross-validation error (Default = "AIC"). The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
+#' @param n_cluster Number of parallel clusters, I recommend using the number of CPU cores (Default = 1).
+#' @param eps Threshold for convergence (.01 for quick batch simulations, .0001 for accurate results). Note that using .001 rather than .01 (default) can more than double or triple the computing time of genetic_var_select.
+#' @param maxiter Maximum number of iterations.
+#' @param ylim Optional vector containing the known min and max of the outcome variable. Even if your outcome is known to be in [a,b], if you assume a Gaussian distribution, predict() could return values outside this range. This parameter ensures that this never happens. This is not necessary with a distribution that already assumes the proper range (ex: [0,1] with binomial distribution).
+#' @param family Outcome distribution and link function (Default = gaussian).
+#' @param seed Optional seed.
+#' @param progress If TRUE, shows the progress done (Default=TRUE).
+#' @param cv_iter Number of cross-validation iterations (Default = 5).
+#' @param cv_folds Number of cross-validation folds (Default = 10). Using \code{cv_folds=NROW(data)} will lead to leave-one-out cross-validation.
+#' @param folds Optional list of vectors containing the fold number for each observation. Bypass cv_iter and cv_folds. Setting your own folds could be important for certain data types like time series or longitudinal data.
+#' @param Huber_p Parameter controlling the Huber cross-validation error (Default = 1.345).
+#' @param classification Set to TRUE if you are doing classification and cross-validation (binary outcome).
+#' @param print If TRUE, print the parameters of the search distribution and the entropy at each iteration. Note: Only works using Rterm.exe in Windows due to parallel clusters. (Default = FALSE).
+#' @param test_only If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.
+#' @return Returns a list containing the best subset's fit, cross-validation output, latent variables and starting points.
+#' @examples
+#'	\dontrun{
+#'	## Example
+#'	train = example_3way_3latent(250, 2, seed=777)
+#'	nes = r1nes_var_select(train$data, latent_var=train$latent_var,
+#'	formula=y ~ E*G*Z)
+#'	}
+#' @import foreach snow doSNOW utils iterators
+#' @export
+
+r1nes_var_select = function(data, formula, parallel_iter=3, alpha=c(1,5,10), entropy_threshold=.05, popsize=25, lr = .2, prop_ignored=.50, latent_var=NULL, search_criterion="AICc", n_cluster=3, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, progress=TRUE, cv_iter=5, cv_folds=5, folds=NULL, Huber_p=1.345, classification=FALSE, print=FALSE, test_only=FALSE){
 	
 	if (search_criterion == "cv_AUC") classification = TRUE
 
@@ -5249,7 +5457,7 @@ r1nes_var_select = function(data, formula, parallel_iter=3, alpha=c(1,5,10), ent
 					else if (search_criterion=="AICc") crit[p] = -fit$true_model_parameters$AICc
 					else if (search_criterion=="BIC") crit[p] = -fit$true_model_parameters$BIC
 					else{
-						fit_cv = IMLEGIT_cv(data=data, formula=formula, latent_var = latent_var_pop, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_pop[[p]], eps=eps, maxiter=maxiter, family=family, ylim=ylim)
+						fit_cv = IMLEGIT_cv(data=data, formula=formula, latent_var = latent_var_pop, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_pop[[p]], eps=eps, maxiter=maxiter, family=family, ylim=ylim, test_only = test_only)
 						if (search_criterion=="cv") crit[p] = mean(fit_cv$R2_cv)
 						else if (search_criterion=="cv_Huber") crit[p] = -mean(fit_cv$Huber_cv)
 						else if (search_criterion=="cv_L1") crit[p] = -mean(fit_cv$L1_cv)
@@ -5338,6 +5546,6 @@ r1nes_var_select = function(data, formula, parallel_iter=3, alpha=c(1,5,10), ent
 		}
 	}
 	best_fit = IMLEGIT(data=data, formula=formula, latent_var = latent_var_best, start_latent_var=start_latent_var_best, eps=eps, maxiter=maxiter, family=family, ylim=ylim, print=FALSE)
-	best_fit_cv = IMLEGIT_cv(data=data, formula=formula, latent_var = latent_var_best, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_best, eps=eps, maxiter=maxiter, family=family, ylim=ylim)
+	best_fit_cv = IMLEGIT_cv(data=data, formula=formula, latent_var = latent_var_best, cv_iter=cv_iter, cv_folds=cv_folds, folds=folds, Huber_p=Huber_p, classification=classification, start_latent_var=start_latent_var_best, eps=eps, maxiter=maxiter, family=family, ylim=ylim, test_only = test_only)
 	return(list(fit=best_fit, fit_cv=best_fit_cv, data=data, latent_var=latent_var_best, start_latent_var=start_latent_var_best))
 }

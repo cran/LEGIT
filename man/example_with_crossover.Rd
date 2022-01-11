@@ -4,9 +4,17 @@
 \alias{example_with_crossover}
 \title{Simulated example of a 2 way interaction GxE model with crossover point.}
 \usage{
-example_with_crossover(N, sigma = 1, c = 0, coef_main = c(0, 1, 2),
-  coef_G = c(0.3, 0.1, 0.2, 0.4), coef_E = c(0.45, 0.35, 0.2),
-  logit = FALSE, seed = NULL, beta_param = c(2, 2))
+example_with_crossover(
+  N,
+  sigma = 1,
+  c = 0,
+  coef_main = c(0, 1, 2),
+  coef_G = c(0.3, 0.1, 0.2, 0.4),
+  coef_E = c(0.45, 0.35, 0.2),
+  logit = FALSE,
+  seed = NULL,
+  beta_param = c(2, 2)
+)
 }
 \arguments{
 \item{N}{Sample size.}

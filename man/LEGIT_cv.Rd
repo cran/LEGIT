@@ -4,11 +4,29 @@
 \alias{LEGIT_cv}
 \title{Cross-validation for the LEGIT model}
 \usage{
-LEGIT_cv(data, genes, env, formula, cv_iter = 5, cv_folds = 10,
-  folds = NULL, Huber_p = 1.345, classification = FALSE,
-  start_genes = NULL, start_env = NULL, eps = 0.001, maxiter = 100,
-  family = gaussian, ylim = NULL, seed = NULL, id = NULL,
-  crossover = NULL, crossover_fixed = FALSE)
+LEGIT_cv(
+  data,
+  genes,
+  env,
+  formula,
+  cv_iter = 5,
+  cv_folds = 10,
+  folds = NULL,
+  Huber_p = 1.345,
+  classification = FALSE,
+  start_genes = NULL,
+  start_env = NULL,
+  eps = 0.001,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  seed = NULL,
+  id = NULL,
+  crossover = NULL,
+  crossover_fixed = FALSE,
+  lme4 = FALSE,
+  test_only = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -48,6 +66,10 @@ LEGIT_cv(data, genes, env, formula, cv_iter = 5, cv_folds = 10,
 \item{crossover}{If not NULL, estimates the crossover point of \emph{E} using the provided value as starting point (To test for diathesis-stress vs differential susceptibility).}
 
 \item{crossover_fixed}{If TRUE, instead of estimating the crossover point of E, we force/fix it to the value of "crossover". (Used when creating a diathes-stress model) (Default = FALSE).}
+
+\item{lme4}{If TRUE, uses lme4::lmer or lme4::glmer; Note that is an experimental feature, bugs may arise and certain functions may fail. Currently only summary(), plot(), GxE_interaction_test(), LEGIT(), LEGIT_cv() work. Also note that the AIC and certain elements ignore the existence of the genes and environment variables, thus the AIC may not be used for variable selection of the genes and the environment. However, the AIC can still be used to compare models with the same genes and environments. (Default=FALSE).}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
 }
 \value{
 If \code{classification} = FALSE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a matrix of the possible outliers (standardized residuals > 2.5 or < -2.5) and their corresponding standardized residuals and standardized pearson residuals. If \code{classification} = TRUE, returns a list containing, in the following order: a vector of the cross-validated \eqn{R^2} at each iteration, a vector of the Huber cross-validation error at each iteration, a vector of the L1-norm cross-validation error at each iteration, a vector of the AUC at each iteration, a matrix of the best choice of threshold (based on Youden index) and the corresponding specificity and sensitivity at each iteration, and a list of objects of class "roc" (to be able to make roc curve plots) at each iteration. The Huber and L1-norm cross-validation errors are alternatives to the usual cross-validation L2-norm error (which the \eqn{R^2} is based on) that are more resistant to outliers, the lower the values the better.
@@ -64,6 +86,9 @@ cv_5folds
 # Leave-one-out cross-validation (Note: very slow)
 cv_loo = LEGIT_cv(train$data, train$G, train$E, y ~ G*E*z, cv_iter=1, cv_folds=250)
 cv_loo
+# Test set only
+cv_test = LEGIT_cv(train$data, train$G, train$E, y ~ G*E*z, cv_iter=1, cv_folds=5, test_only=TRUE)
+cv_test
 # Cross-validation 4 times with 5 Folds (binary outcome)
 train_bin = example_2way(500, 2.5, logit=TRUE, seed=777)
 cv_5folds_bin = LEGIT_cv(train_bin$data, train_bin$G, train_bin$E, y ~ G*E, 

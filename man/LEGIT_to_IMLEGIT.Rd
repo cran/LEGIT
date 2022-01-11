@@ -4,8 +4,18 @@
 \alias{LEGIT_to_IMLEGIT}
 \title{LEGIT to IMLEGIT}
 \usage{
-LEGIT_to_IMLEGIT(fit, data, genes, env, formula, eps = 0.001,
-  maxiter = 100, family = gaussian, ylim = NULL, print = TRUE)
+LEGIT_to_IMLEGIT(
+  fit,
+  data,
+  genes,
+  env,
+  formula,
+  eps = 0.001,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  print = TRUE
+)
 }
 \arguments{
 \item{fit}{LEGIT model}

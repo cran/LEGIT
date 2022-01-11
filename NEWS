@@ -1,3 +1,13 @@
+LEGIT v1.4 (Release date: 2022-01-11)
+==============
+
+Changes:
+
+* Added mixed-model LEGIT through lme4 (experimental)
+* Added ability to do variable selection on AIC, AICc, and BIC when you have a quasi family
+* Added option for validation R-Squared, instead of cross-validation R-Square
+* Fixed bug, elastic net was not using the correct cross-validation folds (only the default)
+
 LEGIT v1.31 (Release date: 2019-08-29)
 ==============
 

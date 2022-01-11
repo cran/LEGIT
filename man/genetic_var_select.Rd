@@ -4,13 +4,32 @@
 \alias{genetic_var_select}
 \title{Parallel genetic algorithm variable selection (for IMLEGIT)}
 \usage{
-genetic_var_select(data, formula, parallel_iter = 10,
-  entropy_threshold = 0.1, popsize = 25, mutation_prob = 0.5,
-  first_pop = NULL, latent_var = NULL, search_criterion = "AIC",
-  maxgen = 100, eps = 0.01, maxiter = 100, family = gaussian,
-  ylim = NULL, seed = NULL, progress = TRUE, n_cluster = 1,
-  best_subsets = 5, cv_iter = 5, cv_folds = 5, folds = NULL,
-  Huber_p = 1.345, classification = FALSE)
+genetic_var_select(
+  data,
+  formula,
+  parallel_iter = 10,
+  entropy_threshold = 0.1,
+  popsize = 25,
+  mutation_prob = 0.5,
+  first_pop = NULL,
+  latent_var = NULL,
+  search_criterion = "AIC",
+  maxgen = 100,
+  eps = 0.01,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  seed = NULL,
+  progress = TRUE,
+  n_cluster = 1,
+  best_subsets = 5,
+  cv_iter = 5,
+  cv_folds = 5,
+  folds = NULL,
+  Huber_p = 1.345,
+  classification = FALSE,
+  test_only = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -58,6 +77,8 @@ genetic_var_select(data, formula, parallel_iter = 10,
 \item{Huber_p}{Parameter controlling the Huber cross-validation error (Default = 1.345).}
 
 \item{classification}{Set to TRUE if you are doing classification and cross-validation (binary outcome).}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
 }
 \value{
 Returns a list of vectors containing the percentage of times that each variable was included in the final populations, the criterion of the best k models, the starting points of the best k models (with the names of the best variables) and the entropy of the populations.

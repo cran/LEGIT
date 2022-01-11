@@ -5,7 +5,7 @@ date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteIndexEntry{LEGIT}
+  %\VignetteIndexEntry{Latent Environmental & Genetic InTeraction (LEGIT) modelling}
   %\VignetteEncoding{UTF-8}
 ---
 

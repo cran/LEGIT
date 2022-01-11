@@ -4,15 +4,34 @@
 \alias{stepwise_search_IM}
 \title{Stepwise search for the best subset of elements in the latent variables with the IMLEGIT model}
 \usage{
-stepwise_search_IM(data, formula, interactive_mode = FALSE,
-  latent_var_original = NULL, latent_var_extra = NULL,
-  search_type = "bidirectional-forward", search = 0,
-  search_criterion = "AIC", forward_exclude_p_bigger = 0.2,
-  backward_exclude_p_smaller = 0.01, exclude_worse_AIC = TRUE,
-  max_steps = 100, cv_iter = 5, cv_folds = 10, folds = NULL,
-  Huber_p = 1.345, classification = FALSE, start_latent_var = NULL,
-  eps = 0.01, maxiter = 100, family = gaussian, ylim = NULL,
-  seed = NULL, print = TRUE, remove_miss = FALSE)
+stepwise_search_IM(
+  data,
+  formula,
+  interactive_mode = FALSE,
+  latent_var_original = NULL,
+  latent_var_extra = NULL,
+  search_type = "bidirectional-forward",
+  search = 0,
+  search_criterion = "AIC",
+  forward_exclude_p_bigger = 0.2,
+  backward_exclude_p_smaller = 0.01,
+  exclude_worse_AIC = TRUE,
+  max_steps = 100,
+  cv_iter = 5,
+  cv_folds = 10,
+  folds = NULL,
+  Huber_p = 1.345,
+  classification = FALSE,
+  start_latent_var = NULL,
+  eps = 0.01,
+  maxiter = 100,
+  family = gaussian,
+  ylim = NULL,
+  seed = NULL,
+  print = TRUE,
+  remove_miss = FALSE,
+  test_only = FALSE
+)
 }
 \arguments{
 \item{data}{data.frame of the dataset to be used.}
@@ -64,6 +83,8 @@ stepwise_search_IM(data, formula, interactive_mode = FALSE,
 \item{print}{If TRUE, print all the steps and notes/warnings. Highly recommended unless you are batch running multiple stepwise searchs. (Default=TRUE).}
 
 \item{remove_miss}{If TRUE, remove missing data completely, otherwise missing data is only removed when adding or dropping a variable (Default = FALSE).}
+
+\item{test_only}{If TRUE, only uses the first fold for training and predict the others folds; do not train on the other folds. So instead of cross-validation, this gives you train/test and you get the test R-squared as output.}
 }
 \value{
 Returns an object of the class "IMLEGIT" which is list containing, in the following order: a glm fit of the main model, a list of the glm fits of the latent variables and a list of the true model parameters (AIC, BIC, rank, df.residual, null.deviance) for which the individual model parts (main, genetic, environmental) don't estimate properly.
