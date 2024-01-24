@@ -56,7 +56,7 @@ ros = GxE_interaction_RoS(train$data, train$G, train$E, y ~ 1)
 ros
 }
 \references{
-Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). psyarxiv.com/27uw8. 10.17605/OSF.IO/27UW8.
+Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). https://osf.io/preprints/psyarxiv/27uw8. 10.17605/OSF.IO/27UW8.
 
 Daniel J. Bauer & Patrick J. Curran. \emph{Probing Interactions in Fixed and Multilevel Regression: Inferential and Graphical Techniques} (2005). Multivariate Behavioral Research, 40:3, 373-400, DOI: 10.1207/s15327906mbr4003_5.
 }

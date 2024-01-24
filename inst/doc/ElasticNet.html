@@ -12,7 +12,7 @@
 
 <meta name="author" content="Alexia Jolicoeur-Martineau" />
 
-<meta name="date" content="2022-01-11" />
+<meta name="date" content="2024-01-23" />
 
 <title>Elastic Net</title>
 
@@ -31,26 +31,27 @@ document.addEventListener('DOMContentLoaded', function(e) {
 </script>
 
 <style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
 
 
 <style type="text/css">
-  code {
-    white-space: pre;
-  }
-  .sourceCode {
-    overflow: visible;
-  }
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -64,55 +65,54 @@ pre > code.sourceCode { white-space: pre-wrap; }
 pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
-  { counter-reset: source-line 0; }
+{ counter-reset: source-line 0; }
 pre.numberSource code > span
-  { position: relative; left: -4em; counter-increment: source-line; }
+{ position: relative; left: -4em; counter-increment: source-line; }
 pre.numberSource code > span > a:first-child::before
-  { content: counter(source-line);
-    position: relative; left: -1em; text-align: right; vertical-align: baseline;
-    border: none; display: inline-block;
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    -khtml-user-select: none; -moz-user-select: none;
-    -ms-user-select: none; user-select: none;
-    padding: 0 4px; width: 4em;
-    color: #aaaaaa;
-  }
-pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
 div.sourceCode
-  {   }
+{ }
 @media screen {
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
-code span.al { color: #ff0000; font-weight: bold; } /* Alert */
-code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
-code span.at { color: #7d9029; } /* Attribute */
-code span.bn { color: #40a070; } /* BaseN */
-code span.bu { } /* BuiltIn */
-code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
-code span.ch { color: #4070a0; } /* Char */
-code span.cn { color: #880000; } /* Constant */
-code span.co { color: #60a0b0; font-style: italic; } /* Comment */
-code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
-code span.do { color: #ba2121; font-style: italic; } /* Documentation */
-code span.dt { color: #902000; } /* DataType */
-code span.dv { color: #40a070; } /* DecVal */
-code span.er { color: #ff0000; font-weight: bold; } /* Error */
-code span.ex { } /* Extension */
-code span.fl { color: #40a070; } /* Float */
-code span.fu { color: #06287e; } /* Function */
-code span.im { } /* Import */
-code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
-code span.kw { color: #007020; font-weight: bold; } /* Keyword */
-code span.op { color: #666666; } /* Operator */
-code span.ot { color: #007020; } /* Other */
-code span.pp { color: #bc7a00; } /* Preprocessor */
-code span.sc { color: #4070a0; } /* SpecialChar */
-code span.ss { color: #bb6688; } /* SpecialString */
-code span.st { color: #4070a0; } /* String */
-code span.va { color: #19177c; } /* Variable */
-code span.vs { color: #4070a0; } /* VerbatimString */
-code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
-
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
 </style>
 <script>
 // apply pandoc div.sourceCode style to pre.sourceCode instead
@@ -121,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -333,45 +340,87 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">Elastic Net</h1>
 <h4 class="author">Alexia Jolicoeur-Martineau</h4>
-<h4 class="date">2022-01-11</h4>
+<h4 class="date">2024-01-23</h4>
 
 
 
 <p><strong>Note that you can cite this work as: </strong></p>
-<p><em>Jolicoeur-Martineau, A., Wazana, A., Szekely, E., Steiner, M., Fleming, A. S., Kennedy, J. L., Meaney M. J. &amp; Greenwood, C.M. (2017). Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study. arXiv preprint arXiv:1703.08111.</em></p>
-<p><em>Jolicoeur-Martineau, A., Belsky, J., Szekely, E., Widaman, K. F., Pluess, M., Greenwood, C., &amp; Wazana, A. (2017). Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model. arXiv preprint arXiv:1712.04058.</em></p>
+<p><em>Jolicoeur-Martineau, A., Wazana, A., Szekely, E., Steiner, M.,
+Fleming, A. S., Kennedy, J. L., Meaney M. J. &amp; Greenwood, C.M.
+(2017). Alternating optimization for GxE modelling with weighted genetic
+and environmental scores: examples from the MAVAN study. arXiv preprint
+arXiv:1703.08111.</em></p>
+<p><em>Jolicoeur-Martineau, A., Belsky, J., Szekely, E., Widaman, K. F.,
+Pluess, M., Greenwood, C., &amp; Wazana, A. (2017). Distinguishing
+differential susceptibility, diathesis-stress and vantage sensitivity:
+beyond the single gene and environment model. arXiv preprint
+arXiv:1712.04058.</em></p>
 <div id="elastic-net" class="section level2">
 <h2>Elastic Net</h2>
-<p>From version 1.3.0 of the LEGIT package, we introduce a function to do variable selection with elastic net within the alternating optimization framework of LEGIT. Elastic net is a regression model with a penalty term (<span class="math inline">\(\lambda\)</span>) which penalize parameters so that they don’t become too big. As <span class="math inline">\(\lambda\)</span> becomes bigger, certain parameters become zero which means that their corresponding variables are dropped from the model. The order in which variables are removed from the model can be interpreted as the reversed order of variable importance. Variables that are less important are removed early (when <span class="math inline">\(\lambda\)</span> is small) and variables that are more important are removed later (only when <span class="math inline">\(\lambda\)</span> is large). Please research “lasso” and “elastic net” if you are interested in the details of this method.</p>
-<p>In this package, we implement Elastic Net for use <strong>on the exogenous variables inside the latent variables</strong> (e.g., in a LEGIT model, these are the genetic variants inside <span class="math inline">\(G\)</span> and the environmental variables inside <span class="math inline">\(E\)</span>). We also give the option to only apply Elastic Net on certain latent variables (e.g., only searching for genes in <span class="math inline">\(G\)</span>).</p>
+<p>From version 1.3.0 of the LEGIT package, we introduce a function to
+do variable selection with elastic net within the alternating
+optimization framework of LEGIT. Elastic net is a regression model with
+a penalty term (<span class="math inline">\(\lambda\)</span>) which
+penalize parameters so that they don’t become too big. As <span class="math inline">\(\lambda\)</span> becomes bigger, certain
+parameters become zero which means that their corresponding variables
+are dropped from the model. The order in which variables are removed
+from the model can be interpreted as the reversed order of variable
+importance. Variables that are less important are removed early (when
+<span class="math inline">\(\lambda\)</span> is small) and variables
+that are more important are removed later (only when <span class="math inline">\(\lambda\)</span> is large). Please research
+“lasso” and “elastic net” if you are interested in the details of this
+method.</p>
+<p>In this package, we implement Elastic Net for use <strong>on the
+exogenous variables inside the latent variables</strong> (e.g., in a
+LEGIT model, these are the genetic variants inside <span class="math inline">\(G\)</span> and the environmental variables inside
+<span class="math inline">\(E\)</span>). We also give the option to only
+apply Elastic Net on certain latent variables (e.g., only searching for
+genes in <span class="math inline">\(G\)</span>).</p>
 <p>Elastic Net gives us two main benefits:</p>
 <ol style="list-style-type: decimal">
 <li>the order of importance of each variable</li>
-<li>Given a criterion (AIC, BIC, cross-validation <span class="math inline">\(R^2\)</span>), it can be used to automatically chose the best model very quickly (only comparing <span class="math inline">\(p\)</span> models, where <span class="math inline">\(p\)</span> is the number of variables, as opposed to <span class="math inline">\(2^p\)</span> models).</li>
+<li>Given a criterion (AIC, BIC, cross-validation <span class="math inline">\(R^2\)</span>), it can be used to automatically
+chose the best model very quickly (only comparing <span class="math inline">\(p\)</span> models, where <span class="math inline">\(p\)</span> is the number of variables, as opposed
+to <span class="math inline">\(2^p\)</span> models).</li>
 </ol>
-<p>It is very fast and it works much better than other approaches; we highly recommend using it. With Elastic Net, the task of choosing the genes and environments of a LEGIT model can be fully automatized.</p>
+<p>It is very fast and it works much better than other approaches; we
+highly recommend using it. With Elastic Net, the task of choosing the
+genes and environments of a LEGIT model can be fully automatized.</p>
 </div>
 <div id="example" class="section level2">
 <h2>Example</h2>
-<p>Let’s take a quick look at a two-way example with continuous outcome:</p>
-<p><span class="math display">\[\mathbf{g}_j \sim Binomial(n=1,p=.30) \\ j = 1, 2, 3, 4\]</span> <span class="math display">\[\mathbf{e}_l \sim Normal(\mu=0,\sigma=1.5) \\ l = 1, 2, 3\]</span> <span class="math display">\[\mathbf{g} = .2\mathbf{g}_1 + .15\mathbf{g}_2 - .3\mathbf{g}_3 + .1\mathbf{g}_4 + .05\mathbf{g}_1\mathbf{g}_3 + .2\mathbf{g}_2\mathbf{g}_3 \]</span> <span class="math display">\[ \mathbf{e} = -.45\mathbf{e}_1 + .35\mathbf{e}_2 + .2\mathbf{e}_3\]</span> <span class="math display">\[y = -1 + 2\mathbf{g} + 3\mathbf{e} + 4\mathbf{ge} + \epsilon \]</span> where <span class="math inline">\(\epsilon \sim Normal(0,.5)\)</span>.</p>
+<p>Let’s take a quick look at a two-way example with continuous
+outcome:</p>
+<p><span class="math display">\[\mathbf{g}_j \sim Binomial(n=1,p=.30) \\
+j = 1, 2, 3, 4\]</span> <span class="math display">\[\mathbf{e}_l \sim
+Normal(\mu=0,\sigma=1.5) \\ l = 1, 2, 3\]</span> <span class="math display">\[\mathbf{g} = .2\mathbf{g}_1 + .15\mathbf{g}_2 -
+.3\mathbf{g}_3 + .1\mathbf{g}_4 + .05\mathbf{g}_1\mathbf{g}_3 +
+.2\mathbf{g}_2\mathbf{g}_3 \]</span> <span class="math display">\[
+\mathbf{e} = -.45\mathbf{e}_1 + .35\mathbf{e}_2 +
+.2\mathbf{e}_3\]</span> <span class="math display">\[y = -1 +
+2\mathbf{g} + 3\mathbf{e} + 4\mathbf{ge} + \epsilon \]</span> where
+<span class="math inline">\(\epsilon \sim Normal(0,.5)\)</span>.</p>
 <p>This is a standard GxE model.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(LEGIT)</span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="fu">library</span>(LEGIT)</span></code></pre></div>
 <pre><code>## Loading required package: formula.tools</code></pre>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>N <span class="ot">=</span> <span class="dv">500</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>train <span class="ot">=</span> <span class="fu">example_2way</span>(N, <span class="at">sigma=</span>.<span class="dv">5</span>, <span class="at">logit=</span><span class="cn">FALSE</span>, <span class="at">seed=</span><span class="dv">1</span>)</span></code></pre></div>
-<p>Now we will add 5 genes which are irrelevant. We expect Elastic Net to delete them first. However, note that <span class="math inline">\(\mathbf{g}_1\mathbf{g}_3\)</span> has a very small parameter (<span class="math inline">\(.05\)</span>) so it’s possible that it will be removed early. Let’s add the irrelevant genes and try it out.</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>g1_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>g2_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>g3_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>g4_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>g5_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>train<span class="sc">$</span>G <span class="ot">=</span> <span class="fu">cbind</span>(train<span class="sc">$</span>G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>lv <span class="ot">=</span> <span class="fu">list</span>(<span class="at">G=</span>train<span class="sc">$</span>G, <span class="at">E=</span>train<span class="sc">$</span>E)</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Elastic Net</span></span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E)</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit)</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>N <span class="ot">=</span> <span class="dv">500</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>train <span class="ot">=</span> <span class="fu">example_2way</span>(N, <span class="at">sigma=</span>.<span class="dv">5</span>, <span class="at">logit=</span><span class="cn">FALSE</span>, <span class="at">seed=</span><span class="dv">1</span>)</span></code></pre></div>
+<p>Now we will add 5 genes which are irrelevant. We expect Elastic Net
+to delete them first. However, note that <span class="math inline">\(\mathbf{g}_1\mathbf{g}_3\)</span> has a very small
+parameter (<span class="math inline">\(.05\)</span>) so it’s possible
+that it will be removed early. Let’s add the irrelevant genes and try it
+out.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a>g1_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>g2_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>g3_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a>g4_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a>g5_bad <span class="ot">=</span> <span class="fu">rbinom</span>(N,<span class="dv">1</span>,.<span class="dv">30</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a>train<span class="sc">$</span>G <span class="ot">=</span> <span class="fu">cbind</span>(train<span class="sc">$</span>G, g1_bad, g2_bad, g3_bad, g4_bad, g5_bad)</span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a>lv <span class="ot">=</span> <span class="fu">list</span>(<span class="at">G=</span>train<span class="sc">$</span>G, <span class="at">E=</span>train<span class="sc">$</span>E)</span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="co"># Elastic Net</span></span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E)</span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="fu">summary</span>(fit)</span></code></pre></div>
 <pre><code>##            Lambda Model index       AIC      AICc       BIC g1 g2 g3 g4 g1_g3
 ##  [1,] 0.684846307           1 1302.6229 1302.8505 1332.1252  1  0  0  0     0
 ##  [2,] 0.568571435           3 1077.8936 1078.1869 1111.6105  1  0  1  0     0
@@ -396,9 +445,12 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##  [9,]     1      1      1      0      0      1  1  1  1
 ## [10,]     1      1      1      1      0      1  1  1  1
 ## [11,]     1      1      1      1      1      1  1  1  1</code></pre>
-<p>We see that the order of variable importance is almost correct with the exception of <span class="math inline">\(\mathbf{g}_1\mathbf{g}_3\)</span>. The model with the lowest BIC and AIC is the one without the irrelevant genes and <span class="math inline">\(\mathbf{g}_1\mathbf{g}_3\)</span>.</p>
-<p>Rather than looking in the summary, one can simply grab the best model using the function “best_model”.</p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">best_model</span>(fit, <span class="at">criterion=</span><span class="st">&quot;BIC&quot;</span>)</span></code></pre></div>
+<p>We see that the order of variable importance is almost correct with
+the exception of <span class="math inline">\(\mathbf{g}_1\mathbf{g}_3\)</span>. The model with
+the lowest BIC and AIC is the one without the irrelevant genes and <span class="math inline">\(\mathbf{g}_1\mathbf{g}_3\)</span>.</p>
+<p>Rather than looking in the summary, one can simply grab the best
+model using the function “best_model”.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a><span class="fu">best_model</span>(fit, <span class="at">criterion=</span><span class="st">&quot;BIC&quot;</span>)</span></code></pre></div>
 <pre><code>## $results
 ##      AIC     AICc      BIC 
 ## 762.6244 763.2650 813.1997 
@@ -479,11 +531,14 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## 
 ## $index
 ## [1] 21</code></pre>
-<p>We can also plot the coefficients of the variables over different values of <span class="math inline">\(\lambda\)</span>.</p>
+<p>We can also plot the coefficients of the variables over different
+values of <span class="math inline">\(\lambda\)</span>.</p>
 <p><code>{r}{r fig1, fig.height = 5, fig.width = 5} plot(fit)</code></p>
-<p>Now, we might want to look at the model with the highest cross-validation <span class="math inline">\(R^2\)</span> (or equivalently lowest cross-validation error). We can do this easily.</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="at">cross_validation=</span><span class="cn">TRUE</span>, <span class="at">cv_iter=</span><span class="dv">5</span>, <span class="at">cv_folds=</span><span class="dv">10</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(fit)</span></code></pre></div>
+<p>Now, we might want to look at the model with the highest
+cross-validation <span class="math inline">\(R^2\)</span> (or
+equivalently lowest cross-validation error). We can do this easily.</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="at">cross_validation=</span><span class="cn">TRUE</span>, <span class="at">cv_iter=</span><span class="dv">5</span>, <span class="at">cv_folds=</span><span class="dv">10</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="fu">summary</span>(fit)</span></code></pre></div>
 <pre><code>##            Lambda Model index       AIC      AICc       BIC     cv_R2  cv_Huber
 ##  [1,] 0.684846307           1 1302.6229 1302.8505 1332.1252 0.9247671 0.3606985
 ##  [2,] 0.568571435           3 1077.8936 1078.1869 1111.6105 0.9519509 0.2451501
@@ -520,7 +575,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ##  [9,]  1  1
 ## [10,]  1  1
 ## [11,]  1  1</code></pre>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">best_model</span>(fit, <span class="at">criterion=</span><span class="st">&quot;cv_R2&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a><span class="fu">best_model</span>(fit, <span class="at">criterion=</span><span class="st">&quot;cv_R2&quot;</span>)</span></code></pre></div>
 <pre><code>## $results
 ##         AIC        AICc         BIC       cv_R2    cv_Huber       cv_L1 
 ## 764.2622105 765.0111817 819.0521158   0.9745899   0.1345163   0.4085227 
@@ -601,21 +656,27 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 ## 
 ## $index
 ## [1] 22</code></pre>
-<p>We see that there is little difference in cross-validation <span class="math inline">\(R^2\)</span> for most models, so in this case, it is not particularly meaningful.</p>
-<p>Let say that you do not want the model selected by “best_model”, but instead want the model with index 8 instead. You can simply do:</p>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fit_mychoice <span class="ot">=</span> fit<span class="sc">$</span>fit[[<span class="dv">8</span>]]</span></code></pre></div>
+<p>We see that there is little difference in cross-validation <span class="math inline">\(R^2\)</span> for most models, so in this case, it
+is not particularly meaningful.</p>
+<p>Let say that you do not want the model selected by “best_model”, but
+instead want the model with index 8 instead. You can simply do:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a>fit_mychoice <span class="ot">=</span> fit<span class="sc">$</span>fit[[<span class="dv">8</span>]]</span></code></pre></div>
 <p>Note that you can apply Elastic only on <span class="math inline">\(G\)</span> or <span class="math inline">\(E\)</span> if desired.</p>
-<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Elastic net only applied on G</span></span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="fu">c</span>(<span class="dv">1</span>))</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Elastic net only applied on E</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="fu">c</span>(<span class="dv">2</span>))</span></code></pre></div>
-<p>Finally, another thing to keep in mind is that the <span class="math inline">\(\lambda\)</span> (penalty term) chosen may be badly chosen or may not be enough (if you have more than 100 variables, with the default of 100 <span class="math inline">\(\lambda\)</span>’s, you will not see all variables being dropped one by one). There are ways to fix these issues.</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="co"># Elastic net only applied on G</span></span>
+<span id="cb13-2"><a href="#cb13-2" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="fu">c</span>(<span class="dv">1</span>))</span>
+<span id="cb13-3"><a href="#cb13-3" tabindex="-1"></a><span class="co"># Elastic net only applied on E</span></span>
+<span id="cb13-4"><a href="#cb13-4" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="fu">c</span>(<span class="dv">2</span>))</span></code></pre></div>
+<p>Finally, another thing to keep in mind is that the <span class="math inline">\(\lambda\)</span> (penalty term) chosen may be
+badly chosen or may not be enough (if you have more than 100 variables,
+with the default of 100 <span class="math inline">\(\lambda\)</span>’s,
+you will not see all variables being dropped one by one). There are ways
+to fix these issues.</p>
 <p>If not all variables are dropped, even at high <span class="math inline">\(\lambda\)</span>, increase <span class="math inline">\(\lambda_{max}\)</span> in the following way:</p>
-<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Most E variables not removed, use lambda_mult &gt; 1 to remove more</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="fu">c</span>(<span class="dv">2</span>), <span class="at">lambda_mult=</span><span class="dv">5</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" tabindex="-1"></a><span class="co"># Most E variables not removed, use lambda_mult &gt; 1 to remove more</span></span>
+<span id="cb14-2"><a href="#cb14-2" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="fu">c</span>(<span class="dv">2</span>), <span class="at">lambda_mult=</span><span class="dv">5</span>)</span></code></pre></div>
 <p>If you have too many variables and want more <span class="math inline">\(\lambda\)</span>’s, do the following:</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Want more lambdas (useful if # of variables is large)</span></span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="at">n_lambda =</span> <span class="dv">200</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="co"># Want more lambdas (useful if # of variables is large)</span></span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a>fit <span class="ot">=</span> <span class="fu">elastic_net_var_select</span>(train<span class="sc">$</span>data, lv, y <span class="sc">~</span> G<span class="sc">*</span>E, <span class="at">n_lambda =</span> <span class="dv">200</span>)</span></code></pre></div>
 </div>
 
 

@@ -134,7 +134,7 @@ plot(GxE_test_BIC$fits$diathesis_stress_WEAK, xlim=c(0,10), ylim=c(3,13))
 }
 }
 \references{
-Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). psyarxiv.com/27uw8. 10.17605/OSF.IO/27UW8.
+Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). https://osf.io/preprints/psyarxiv/27uw8. 10.17605/OSF.IO/27UW8.
 
 Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
 

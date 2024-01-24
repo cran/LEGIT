@@ -1,7 +1,7 @@
-## ---- out.width = "700px"-----------------------------------------------------
+## ----out.width = "700px"------------------------------------------------------
 knitr::include_graphics("https://raw.githubusercontent.com/AlexiaJM/LEGIT/master/images/GxE_testing_strong.png")
 
-## ---- out.width = "700px"-----------------------------------------------------
+## ----out.width = "700px"------------------------------------------------------
 knitr::include_graphics("https://raw.githubusercontent.com/AlexiaJM/LEGIT/master/images/GxE_testing_weak.png")
 
 ## -----------------------------------------------------------------------------

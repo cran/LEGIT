@@ -309,7 +309,7 @@ example_2way_lme4 = function (N, sigma = 1, logit = FALSE, seed = NULL)
 longitudinal_folds = function(cv_iter=1, cv_folds=10, id, formula=NULL, data=NULL, data_needed=NULL, print=TRUE){
 	if (cv_folds > length(unique(id))) stop("cv_folds must be smaller than the number of unique id")
 	# in IMLEGIT, data_needed would be latent_var which is a list and we need to unlist it if that's the case
-	if (!is.null(data_needed)) if(class(data_needed)=="list") data_needed = do.call(cbind.data.frame, data_needed)
+	if (!is.null(data_needed)) if (methods::is(data_needed,"list")) data_needed = do.call(cbind.data.frame, data_needed)
 	if (!is.null(data) && !is.null(formula)){
 		# Extracting only the variables available from the formula
 		formula = as.formula(formula)
@@ -392,7 +392,7 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 	if(!is.null(start_env)){
 		if (NCOL(env)!=length(start_env)) stop("start_env must either be NULL or have the same length as the number of environments")
 	}
-	if (class(data) != "data.frame" && class(data) != "matrix") stop("data must be a data.frame")
+	if (!methods::is(data,"data.frame") && !methods::is(data,"matrix")) stop("data must be a data.frame")
 
 	# getting right formats
 	# Retaining only the needed variables from the dataset (need to set G and E variables for this to work, they will be replaced with their proper values later)
@@ -845,7 +845,7 @@ LEGIT = function(data, genes, env, formula, start_genes=NULL, start_env=NULL, ep
 #' plot(GxE_test_BIC$fits$diathesis_stress_WEAK, xlim=c(0,10), ylim=c(3,13))
 #' }
 #' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). psyarxiv.com/27uw8. 10.17605/OSF.IO/27UW8.
+#' @references Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). https://osf.io/preprints/psyarxiv/27uw8. 10.17605/OSF.IO/27UW8.
 #' @references Alexia Jolicoeur-Martineau, Ashley Wazana, Eszter Szekely, Meir Steiner, Alison S. Fleming, James L. Kennedy, Michael J. Meaney, Celia M.T. Greenwood and the MAVAN team. \emph{Alternating optimization for GxE modelling with weighted genetic and environmental scores: examples from the MAVAN study} (2017). arXiv:1703.08111.
 #' @references Jay Belsky, Michael Pluess and Keith F. Widaman. \emph{Confirmatory and competitive evaluation of alternative gene-environment interaction hypotheses} (2013). Journal of Child Psychology and Psychiatry, 54(10), 1135-1143.
 #' @export
@@ -1069,7 +1069,7 @@ GxE_interaction_test = function(data, genes, env, formula_noGxE, crossover=c("mi
 #'	ros = GxE_interaction_RoS(train$data, train$G, train$E, y ~ 1)
 #'	ros
 #' @import formula.tools stats
-#' @references Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). psyarxiv.com/27uw8. 10.17605/OSF.IO/27UW8.
+#' @references Alexia Jolicoeur-Martineau, Jay Belsky, Eszter Szekely, Keith F. Widaman, Michael Pluess, Celia Greenwood and Ashley Wazana. \emph{Distinguishing differential susceptibility, diathesis-stress and vantage sensitivity: beyond the single gene and environment model} (2017). https://osf.io/preprints/psyarxiv/27uw8. 10.17605/OSF.IO/27UW8.
 #' @references  Daniel J. Bauer & Patrick J. Curran. \emph{Probing Interactions in Fixed and Multilevel Regression: Inferential and Graphical Techniques} (2005). Multivariate Behavioral Research, 40:3, 373-400, DOI: 10.1207/s15327906mbr4003_5.
 #' @export
 
@@ -1262,7 +1262,7 @@ IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, m
 		if (!is.numeric(ylim) || length(ylim) !=2) stop("ylim must either be NULL or a numeric vector of size two")
 	}
 	# Setting up latent_var and checks
-	if (class(latent_var)!="list") stop("latent_var must be a list of datasets")
+	if (!methods::is(latent_var,"list")) stop("latent_var must be a list of datasets")
 	k = length(latent_var)
 	if (k==0) stop("latent_var cannot be an empty list")
 	if (is.null(names(latent_var))){
@@ -1281,7 +1281,7 @@ IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, m
 	if (maxiter <= 0) warning("maxiter must be > 0")
 	if (k > 1) for (i in 1:(k-1)) if (NROW(latent_var[[i]]) != NROW(latent_var[[i+1]])) stop("Some datasets in latent_var don't have the same number of observations")
 	if(!is.null(start_latent_var)){
-		if (class(start_latent_var)!="list") stop("start_latent_var must be a lit of vectors (or NULL)")
+		if (!methods::is(start_latent_var,"list")) stop("start_latent_var must be a lit of vectors (or NULL)")
 		if (k!=length(start_latent_var)) stop("start_latent_var must have the same size as latent_var")
 		for (i in 1:k){
 			if (!is.null(latent_var[[i]])){
@@ -1289,7 +1289,7 @@ IMLEGIT = function(data, latent_var, formula, start_latent_var=NULL, eps=.001, m
 			}
 		}
 	}
-	if (class(data) != "data.frame" && class(data) != "matrix") stop("data must be a data.frame")
+	if (!methods::is(data,"data.frame") && !methods::is(data,"matrix")) stop("data must be a data.frame")
 
 	# getting right formats
 	# Retaining only the needed variables from the dataset (need to set elements in latent_var for this to work, they will be replaced with their proper values later)
@@ -1605,7 +1605,7 @@ elastic_net_var_select = function(data, latent_var, formula, latent_var_searched
 		if (!is.numeric(ylim) || length(ylim) !=2) stop("ylim must either be NULL or a numeric vector of size two")
 	}
 	# Setting up latent_var and checks
-	if (class(latent_var)!="list") stop("latent_var must be a list of datasets")
+	if (!methods::is(latent_var,"list")) stop("latent_var must be a list of datasets")
 	k = length(latent_var)
 	if (k==0) stop("latent_var cannot be an empty list")
 	if (is.null(names(latent_var))){
@@ -1623,7 +1623,7 @@ elastic_net_var_select = function(data, latent_var, formula, latent_var_searched
 	if (maxiter <= 0) warning("maxiter must be > 0")
 	if (k > 1) for (i in 1:(k-1)) if (NROW(latent_var[[i]]) != NROW(latent_var[[i+1]])) stop("Some datasets in latent_var don't have the same number of observations")
 	if(!is.null(start_latent_var)){
-		if (class(start_latent_var)!="list") stop("start_latent_var must be a lit of vectors (or NULL)")
+		if (!methods::is(start_latent_var,"list")) stop("start_latent_var must be a lit of vectors (or NULL)")
 		if (k!=length(start_latent_var)) stop("start_latent_var must have the same size as latent_var")
 		for (i in 1:k){
 			if (!is.null(latent_var[[i]])){
@@ -1631,7 +1631,7 @@ elastic_net_var_select = function(data, latent_var, formula, latent_var_searched
 			}
 		}
 	}
-	if (class(data) != "data.frame" && class(data) != "matrix") stop("data must be a data.frame")
+	if (!methods::is(data,"data.frame") && !methods::is(data,"matrix")) stop("data must be a data.frame")
 
 	# getting right formats
 	# Retaining only the needed variables from the dataset (need to set elements in latent_var for this to work, they will be replaced with their proper values later)
@@ -1771,7 +1771,7 @@ IMLEGIT_net = function(data, latent_var, formula, latent_var_searched=NULL, cros
 		if (!is.numeric(ylim) || length(ylim) !=2) stop("ylim must either be NULL or a numeric vector of size two")
 	}
 	# Setting up latent_var and checks
-	if (class(latent_var)!="list") stop("latent_var must be a list of datasets")
+	if (!methods::is(latent_var,"list")) stop("latent_var must be a list of datasets")
 	k = length(latent_var)
 	if (k==0) stop("latent_var cannot be an empty list")
 	if (is.null(names(latent_var))){
@@ -1790,7 +1790,7 @@ IMLEGIT_net = function(data, latent_var, formula, latent_var_searched=NULL, cros
 	if (maxiter <= 0) warning("maxiter must be > 0")
 	if (k > 1) for (i in 1:(k-1)) if (NROW(latent_var[[i]]) != NROW(latent_var[[i+1]])) stop("Some datasets in latent_var don't have the same number of observations")
 	if(!is.null(start_latent_var)){
-		if (class(start_latent_var)!="list") stop("start_latent_var must be a lit of vectors (or NULL)")
+		if (!methods::is(start_latent_var,"list")) stop("start_latent_var must be a lit of vectors (or NULL)")
 		if (k!=length(start_latent_var)) stop("start_latent_var must have the same size as latent_var")
 		for (i in 1:k){
 			if (!is.null(latent_var[[i]])){
@@ -1798,7 +1798,7 @@ IMLEGIT_net = function(data, latent_var, formula, latent_var_searched=NULL, cros
 			}
 		}
 	}
-	if (class(data) != "data.frame" && class(data) != "matrix") stop("data must be a data.frame")
+	if (!methods::is(data,"data.frame") && !methods::is(data,"matrix")) stop("data must be a data.frame")
 
 	# getting right formats
 	# Retaining only the needed variables from the dataset (need to set elements in latent_var for this to work, they will be replaced with their proper values later)
@@ -2581,7 +2581,7 @@ LEGIT_cv = function (data, genes, env, formula, cv_iter=5, cv_folds=10, folds=NU
 
 		#Residuals (To detect outliers)
 		residuals = residuals + scale(pred-y_test)[s]
-		if(class(family)=="function") pearson_residuals = pearson_residuals + scale((pred-y_test)/sqrt(family()$variance(pred)))[s]
+		if(methods::is(family,"function")) pearson_residuals = pearson_residuals + scale((pred-y_test)/sqrt(family()$variance(pred)))[s]
 		else pearson_residuals = pearson_residuals + scale((pred-y_test)/sqrt(family$variance(pred)))[s]
 	}
 	residuals = residuals/cv_iter
@@ -2661,7 +2661,7 @@ IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=
 	id = NULL
 
 	# Setting up latent_var and checks
-	if (class(latent_var)!="list") stop("latent_var must be a list of datasets")
+	if (!methods::is(latent_var,"list")) stop("latent_var must be a list of datasets")
 	k = length(latent_var)
 	if (k==0) stop("latent_var cannot be an empty list")
 	if (is.null(names(latent_var))){
@@ -2680,7 +2680,7 @@ IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=
 	if (maxiter <= 0) warning("maxiter must be > 0")
 	if (k > 1) for (i in 1:(k-1)) if (NROW(latent_var[[i]]) != NROW(latent_var[[i+1]])) stop("Some datasets in latent_var don't have the same number of observations")
 	if(!is.null(start_latent_var)){
-		if (class(start_latent_var)!="list") stop("start_latent_var must be a lit of vectors (or NULL)")
+		if (!methods::is(start_latent_var,"list")) stop("start_latent_var must be a list of vectors (or NULL)")
 		if (k!=length(start_latent_var)) stop("start_latent_var must have the same size as latent_var")
 		for (i in 1:k){
 			if (!is.null(latent_var[[i]])){
@@ -2688,7 +2688,7 @@ IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=
 			}
 		}
 	}
-	if (class(data) != "data.frame" && class(data) != "matrix") stop("data must be a data.frame")
+	if (!methods::is(data,"data.frame") && !methods::is(data,"matrix")) stop("data must be a data.frame")
 
 	# getting right formats
 	# Retaining only the needed variables from the dataset (need to set elements in latent_var for this to work, they will be replaced with their proper values later)
@@ -2780,7 +2780,7 @@ IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=
 
 		#Residuals (To detect outliers)
 		residuals = residuals + scale(pred-y_test)[s]
-		if(class(family)=="function") pearson_residuals = pearson_residuals + scale((pred-y_test)/sqrt(family()$variance(pred)))[s]
+		if(methods::is(family,"function")) pearson_residuals = pearson_residuals + scale((pred-y_test)/sqrt(family()$variance(pred)))[s]
 		else pearson_residuals = pearson_residuals + scale((pred-y_test)/sqrt(family$variance(pred)))[s]
 	}
 	residuals = residuals/cv_iter
@@ -2807,12 +2807,12 @@ IMLEGIT_cv = function (data, latent_var, formula, cv_iter=5, cv_folds=10, folds=
 }
 
 #' Internal function that does the forward step for the stepwise function.
-#' @param empty_start_dataset If TRUE, the initial dataset is empty.
-#' @param fit Current best fit.
-#' @param ... Same parameters as in the stepwise function.
+#' #@param empty_start_dataset If TRUE, the initial dataset is empty.
+#' #@param fit Current best fit.
+#' #@param ... Same parameters as in the stepwise function.
 #' @return Returns fit, start_genes, start_env and genes_current, genes_toadd if search="genes" or env_current and env_toadd if search="env".
+#' @export
 #' @keywords internal
-"forward_step"
 
 forward_step = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_toadd=NULL, env_toadd=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, test_only = FALSE){
 	
@@ -3076,12 +3076,12 @@ forward_step = function(empty_start_dataset, fit, data, formula, interactive_mod
 }
 
 #' Internal function that does the forward step for the stepwise function.
-#' @param empty_start_dataset If TRUE, the initial dataset is empty.
-#' @param fit Current best fit.
-#' @param ... Same parameters as in the stepwise function.
+#' #@param empty_start_dataset If TRUE, the initial dataset is empty.
+#' #@param fit Current best fit.
+#' #@param ... Same parameters as in the stepwise function.
 #' @return Returns fit, start_latent_var, latent_var_current and latent_var_toadd.
+#' @export
 #' @keywords internal
-"forward_step_IM"
 
 forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_toadd=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, test_only = FALSE){
 	
@@ -3329,12 +3329,12 @@ forward_step_IM = function(empty_start_dataset, fit, data, formula, interactive_
 }
 
 #' Internal function that does the backward step for the stepwise IM function.
-#' @param empty_start_dataset If TRUE, the initial dataset is empty.
-#' @param fit Current best fit.
-#' @param ... Same parameters as in the stepwise function.
+#' #@param empty_start_dataset If TRUE, the initial dataset is empty.
+#' #@param fit Current best fit.
+#' #@param ... Same parameters as in the stepwise function.
 #' @return Returns fit, start_genes, start_env and genes_current, genes_dropped if search="genes" or env_current and env_dropped if search="env".
+#' @export
 #' @keywords internal
-"backward_step"
 
 backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_current=NULL, env_current=NULL, genes_dropped=NULL, env_dropped=NULL, search="genes", search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_genes=NULL, start_env=NULL, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, test_only = FALSE){
 	
@@ -3562,12 +3562,12 @@ backward_step = function(fit, data, formula, interactive_mode=FALSE, genes_curre
 }
 
 #' Internal function that does the backward step for the stepwise IM function.
-#' @param empty_start_dataset If TRUE, the initial dataset is empty.
-#' @param fit Current best fit.
-#' @param ... Same parameters as in the stepwise function.
+#' #@param empty_start_dataset If TRUE, the initial dataset is empty.
+#' #@param fit Current best fit.
+#' #@param ... Same parameters as in the stepwise function.
 #' @return Returns fit, start_latent_var, latent_var_current and latent_var_dropped.
+#' @export
 #' @keywords internal
-"backward_step_IM"
 
 backward_step_IM = function(fit, data, formula, interactive_mode=FALSE, latent_var_current=NULL, latent_var_dropped=NULL, search=NULL, search_criterion="AIC", p_threshold = .20, exclude_worse_AIC=TRUE, max_steps = 100, cv_iter=5, cv_folds=10, folds=NULL, Huber_p=1.345, classification=FALSE, start_latent_var=start_latent_var, eps=.01, maxiter=100, family=gaussian, ylim=NULL, seed=NULL, print=TRUE, test_only = FALSE){
 	

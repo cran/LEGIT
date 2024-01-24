@@ -17,7 +17,7 @@ vignette: >
 
 ## GxE testing
 
-From version 1.2.0 of the LEGIT package, we introduce a function to test for different types of gene-by-environment interactions (GxE) as per [Belsky et al. (2013)](https://www.researchgate.net/publication/256600905_FormalGXEtestJCPP2013). See our preprint: https://psyarxiv.com/27uw8. We want to test if the GxE reflects diathesis stress, differential susceptibility or vantage sensitivity.
+From version 1.2.0 of the LEGIT package, we introduce a function to test for different types of gene-by-environment interactions (GxE) as per [Belsky et al. (2013)](https://www.researchgate.net/publication/256600905_FormalGXEtestJCPP2013). See our preprint: https://osf.io/preprints/psyarxiv/27uw8. We want to test if the GxE reflects diathesis stress, differential susceptibility or vantage sensitivity.
 
 The figure below is a graphical representation of the different types of interactions assuming a STRONG model:
 ```{r, out.width = "700px"}
